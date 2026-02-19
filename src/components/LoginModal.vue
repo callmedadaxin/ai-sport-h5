@@ -44,16 +44,23 @@ watch(countdown, (v) => {
   if (v <= 0 && timer) clearInterval(timer)
 })
 
-function sendCode() {
+async function sendCode() {
   if (!/^1\d{10}$/.test(mobile.value)) {
     alert('请输入正确的手机号')
     return
   }
-  countdown.value = 60
-  timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) clearInterval(timer)
-  }, 1000)
+  try {
+    await authApi.sendCode({ mobile: mobile.value })
+    countdown.value = 60
+    timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) clearInterval(timer)
+    }, 1000)
+  } catch (e) {
+    const msg = e.message || '发送失败'
+    if (e.code === 42900) alert('请60秒后再试')
+    else alert(msg)
+  }
 }
 
 async function submit() {

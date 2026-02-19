@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "pnpm build && scp -r dist/* h5:/var/www/h5/"
   },
   "dependencies": {
     "vue": "^3.4.21",
