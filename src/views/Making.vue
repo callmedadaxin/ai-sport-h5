@@ -1,63 +1,86 @@
 <template>
-  <div class="page-wrap making">
-    <div class="bg" />
-    <div class="card">
-      <div class="card-img">
-        <img src="https://picsum.photos/400/200?random=making" alt="" />
+  <Teleport to="body">
+    <Transition name="making-fade">
+      <div v-show="modelValue" class="making-modal-mask" @click.self="close">
+        <div class="making-modal-card">
+          <div class="card-img">
+            <img src="https://picsum.photos/400/200?random=making" alt="" />
+          </div>
+          <div class="avatar-wrap">
+            <img v-if="avatarUrl" :src="avatarUrl" alt="" class="avatar" />
+            <div v-else class="avatar placeholder">人脸照片</div>
+          </div>
+          <h2 class="status-title">视频正努力制作，请耐心等候</h2>
+          <p class="status-desc">制作完成后将短信通知您。您也可以前往作品中心 查看制作情况</p>
+          <button class="btn" @click="toWorks">前往作品中心</button>
+          <button class="btn" @click="close">再做一个</button>
+        </div>
       </div>
-      <div class="avatar-wrap">
-        <img v-if="avatarUrl" :src="avatarUrl" alt="" class="avatar" />
-        <div v-else class="avatar placeholder">人脸照片</div>
-      </div>
-      <h2 class="status-title">视频正努力制作，请耐心等候</h2>
-      <p class="status-desc">制作完成后将短信通知您。您也可以前往作品中心 查看制作情况</p>
-      <button class="btn" @click="router.push('/works')">前往作品中心</button>
-      <button class="btn" @click="router.push('/')">再做一个</button>
-    </div>
-  </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { worksApi } from '../api'
 
-const route = useRoute()
+const props = defineProps({
+  modelValue: { type: Boolean, default: false },
+  taskId: { type: String, default: '' },
+})
+
+const emit = defineEmits(['update:modelValue', 'to-works'])
 const router = useRouter()
 const avatarUrl = ref('')
 
-onMounted(() => {
-  const taskId = route.query.taskId
-  if (!taskId) return
-  worksApi.refreshProgress(taskId).then((res) => {
-    if (res.workId) router.replace('/works/' + res.workId)
-  }).catch(() => {})
-  // 从提交页可传头像：这里用 sessionStorage 简单传递
-  try {
-    const saved = sessionStorage.getItem('making_avatar')
-    if (saved) avatarUrl.value = saved
-  } catch (_) {}
-})
+watch(() => props.modelValue, (visible) => {
+  if (visible) {
+    if (props.taskId) {
+      worksApi.refreshProgress(props.taskId).then((res) => {
+        if (res.workId) {
+          emit('update:modelValue', false)
+          router.push('/works/' + res.workId)
+        }
+      }).catch(() => {})
+    }
+    try {
+      const saved = sessionStorage.getItem('making_avatar')
+      if (saved) avatarUrl.value = saved
+    } catch (_) {}
+  } else {
+    avatarUrl.value = ''
+  }
+}, { immediate: true })
+
+function close() {
+  emit('update:modelValue', false)
+}
+
+function toWorks() {
+  emit('update:modelValue', false)
+  emit('to-works')
+  router.push('/works')
+}
 </script>
 
 <style scoped>
-.making {
-  min-height: 100vh;
+.making-fade-enter-active,
+.making-fade-leave-active { transition: opacity 0.2s ease; }
+.making-fade-enter-from,
+.making-fade-leave-to { opacity: 0; }
+
+.making-modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0.5rem;
 }
-.bg {
-  position: fixed;
-  inset: 0;
-  background: url('https://picsum.photos/800/600?random=run') center/cover;
-  filter: blur(12px);
-  z-index: 0;
-}
-.card {
-  position: relative;
-  z-index: 1;
+.making-modal-card {
   width: 100%;
   max-width: 20rem;
   background: #fff;

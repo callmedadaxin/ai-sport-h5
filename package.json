@@ -11,12 +11,13 @@
     "deploy": "pnpm build && scp -r dist/* h5:/var/www/h5/"
   },
   "dependencies": {
-    "vue": "^3.4.21",
-    "vue-router": "^4.3.0",
-    "pinia": "^2.1.7",
     "axios": "^1.6.8",
+    "cropperjs": "^1.6.2",
+    "html2canvas": "^1.4.1",
+    "pinia": "^2.1.7",
     "qrcode": "^1.5.3",
-    "html2canvas": "^1.4.1"
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",

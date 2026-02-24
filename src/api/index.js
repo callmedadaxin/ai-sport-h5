@@ -1,17 +1,7 @@
 import axios from 'axios'
+import router from '../router'
 import { useUserStore } from '../stores/user'
-import {
-  mockAuthLogin,
-  mockAuthSendCode,
-  mockTemplateList,
-  mockTemplateDetail,
-  mockWorksList,
-  mockWorksDetail,
-  mockWorksSubmit,
-  mockWorksProgress,
-} from '../mock/index.js'
-
-const useMock = import.meta.env.DEV
+import { showToast } from '../utils/toast'
 
 const request = axios.create({
   baseURL: '/api',
@@ -37,64 +27,61 @@ request.interceptors.request.use((config) => {
 })
 
 request.interceptors.response.use(unwrapRes, (err) => {
+  const status = err.response?.status
   const data = err.response?.data
   const msg = data?.message || err.message
   const e = new Error(msg)
   e.code = data?.code
+
+  // HTTP 401 未登录：toast 提示并跳转首页
+  if (status === 401) {
+    useUserStore().setUser({})
+    showToast('未登录或登录已过期，请先登录')
+    router.push('/')
+    return Promise.reject(e)
+  }
+  // 业务码 40100 未登录/ token 失效
   if (data?.code === 40100) useUserStore().setUser({})
   return Promise.reject(e)
 })
 
-// Mock 返回值也按 { code, message, data }，此处解包后与真实请求一致
-function unwrapMock(promise) {
-  return promise.then((res) => {
-    if (res.code !== 0) {
-      const e = new Error(res.message || '请求失败')
-      e.code = res.code
-      throw e
-    }
-    return res.data
-  })
-}
-
 export const authApi = {
   sendCode(data) {
-    if (useMock) return unwrapMock(mockAuthSendCode(data))
     return request.post('/auth/sendCode', data)
   },
   login(data) {
-    if (useMock) return unwrapMock(mockAuthLogin(data))
     return request.post('/auth/login', data)
   },
 }
 
 export const templateApi = {
   list() {
-    if (useMock) return unwrapMock(mockTemplateList())
     return request.get('/template/list')
   },
   detail(id) {
-    if (useMock) return unwrapMock(mockTemplateDetail(id))
     return request.get(`/template/${id}`)
   },
 }
 
 export const worksApi = {
   list() {
-    if (useMock) return unwrapMock(mockWorksList())
     return request.get('/works/list')
   },
   detail(id) {
-    if (useMock) return unwrapMock(mockWorksDetail(id))
     return request.get(`/works/${id}`)
   },
   submit(data) {
-    if (useMock) return unwrapMock(mockWorksSubmit(data))
     return request.post('/works/submit', data)
   },
   refreshProgress(taskId) {
-    if (useMock) return unwrapMock(mockWorksProgress(taskId))
     return request.get(`/works/progress/${taskId}`)
+  },
+}
+
+/** 微信分享签名：GET /share/wechat/signature?url=当前页完整 URL（不含 hash） */
+export const shareApi = {
+  getWechatSignature(url) {
+    return request.get('/share/wechat/signature', { params: { url } })
   },
 }
 

@@ -30,6 +30,7 @@
 import { ref, watch } from 'vue'
 import { useUserStore } from '../stores/user'
 import { authApi } from '../api'
+import { Toast } from '../utils/toast'
 
 const emit = defineEmits(['close', 'success'])
 const userStore = useUserStore()
@@ -46,7 +47,7 @@ watch(countdown, (v) => {
 
 async function sendCode() {
   if (!/^1\d{10}$/.test(mobile.value)) {
-    alert('请输入正确的手机号')
+    Toast('请输入正确的手机号')
     return
   }
   try {
@@ -58,22 +59,22 @@ async function sendCode() {
     }, 1000)
   } catch (e) {
     const msg = e.message || '发送失败'
-    if (e.code === 42900) alert('请60秒后再试')
-    else alert(msg)
+    if (e.code === 42900) Toast('请60秒后再试')
+    else Toast(msg)
   }
 }
 
 async function submit() {
   if (!/^1\d{10}$/.test(mobile.value)) {
-    alert('请输入正确的手机号')
+    Toast('请输入正确的手机号')
     return
   }
   if (!/^\d{4,6}$/.test(code.value)) {
-    alert('请输入4-6位验证码')
+    Toast('请输入4-6位验证码')
     return
   }
   if (!agreed.value) {
-    alert('请先同意用户隐私协议')
+    Toast('请先同意用户隐私协议')
     return
   }
   loading.value = true
@@ -82,7 +83,7 @@ async function submit() {
     userStore.setUser({ token: res.token, mobile: res.mobile ?? mobile.value })
     emit('success')
   } catch (e) {
-    alert(e.message || '登录失败')
+    Toast(e.message || '登录失败')
   } finally {
     loading.value = false
   }
