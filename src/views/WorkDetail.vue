@@ -59,23 +59,23 @@ function openShare() {
 .work-detail {
   min-height: 100vh;
   background: #0d47a1;
-  padding: 0.4rem;
-  padding-bottom: 2rem;
+  padding: 0.2rem;
+  padding-bottom: 1rem;
 }
-.nav { display: flex; justify-content: flex-end; padding: 0.3rem 0; }
+.nav { display: flex; justify-content: flex-end; padding: 0.15rem 0; }
 .close {
-  width: 0.8rem;
-  height: 0.8rem;
+  width: 0.4rem;
+  height: 0.4rem;
   border: none;
   background: rgba(255,255,255,0.2);
   color: #fff;
   border-radius: 50%;
-  font-size: 0.5rem;
+  font-size: 0.25rem;
   cursor: pointer;
 }
 .video-wrap {
   position: relative;
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
   overflow: hidden;
   aspect-ratio: 16/10;
   background: #000;
@@ -89,18 +89,18 @@ function openShare() {
   justify-content: center;
   background: rgba(0,0,0,0.3);
   color: #fff;
-  font-size: 0.8rem;
+  font-size: 0.4rem;
 }
-.work-title { color: #fff; font-size: 0.44rem; margin: 0.3rem 0 0.1rem; }
-.work-time { color: rgba(255,255,255,0.8); font-size: 0.28rem; margin-bottom: 0.4rem; }
+.work-title { color: #fff; font-size: 0.22rem; margin: 0.15rem 0 0.05rem; }
+.work-time { color: rgba(255,255,255,0.8); font-size: 0.14rem; margin-bottom: 0.2rem; }
 .share-btn {
   width: 100%;
-  padding: 0.4rem;
+  padding: 0.2rem;
   background: #1565c0;
   color: #fff;
   border: none;
-  border-radius: 0.5rem;
-  font-size: 0.38rem;
+  border-radius: 0.25rem;
+  font-size: 0.19rem;
   cursor: pointer;
 }
 </style>

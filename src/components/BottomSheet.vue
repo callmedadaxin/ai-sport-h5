@@ -8,15 +8,9 @@
               <slot name="title">
                 <span>{{ title }}</span>
               </slot>
-              <button
-                v-if="showClose"
-                type="button"
-                class="sheet-close"
-                aria-label="关闭"
-                @click="close"
-              >
-                ×
-              </button>
+              <slot name="close">
+                <span></span>
+              </slot>
             </div>
             <div class="sheet-body">
               <slot />
@@ -64,41 +58,47 @@ function close() {
 .bottom-sheet-panel {
   width: 100%;
   max-height: 85vh;
-  background: #fff;
-  border-radius: 0.5rem 0.5rem 0 0;
+  background: linear-gradient(196deg, #ff4029 24.33%, #ff4d38 52.77%, #ff6350 81.21%);
+  border-radius: 0.3rem 0.3rem 0 0;
   padding-bottom: env(safe-area-inset-bottom);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding: 0.14rem;
 }
 .sheet-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.4rem 0.4rem 0.3rem;
-  font-size: 0.36rem;
-  flex-shrink: 0;
-  border-bottom: 1px solid #eee;
+  height: 0.35rem;
+  line-height: 0.35rem;
+  font-size: 0.16rem;
+  color: #fff;
+  font-weight: 400;
+  line-height: normal;
+  margin-bottom: 0.07rem;
 }
 .sheet-close {
-  width: 0.7rem;
-  height: 0.7rem;
+  width: 0.35rem;
+  height: 0.35rem;
   border: none;
   background: #f0f0f0;
   border-radius: 50%;
-  font-size: 0.5rem;
+  font-size: 0.25rem;
   line-height: 1;
   cursor: pointer;
   color: #666;
 }
 .sheet-body {
   flex: 1;
-  overflow-y: auto;
-  padding: 0 0.4rem 0.4rem;
+  overflow-y: hidden;
+  padding: 0 0.1rem 0.1rem;
+  background: #fff;
+  border-radius: 0.2rem;
 }
 .sheet-footer {
   flex-shrink: 0;
-  padding: 0 0.4rem 0.4rem;
+  padding: 0 0.2rem 0.2rem;
 }
 .sheet-fade-enter-active,
 .sheet-fade-leave-active {

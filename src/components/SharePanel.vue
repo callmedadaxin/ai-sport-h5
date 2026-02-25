@@ -82,15 +82,15 @@ function generatePoster() {
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  padding: 0.5rem;
+  padding: 0.25rem;
   overflow-y: auto;
 }
 .share-panel {
   width: 100%;
-  max-width: 20rem;
+  max-width: 10rem;
   background: linear-gradient(180deg, #fff 0%, #e3f2fd 100%);
-  border-radius: 0.5rem;
-  padding: 0.4rem;
+  border-radius: 0.25rem;
+  padding: 0.2rem;
   position: relative;
 }
 .card-top-line {
@@ -100,70 +100,70 @@ function generatePoster() {
   right: 0;
   height: 4px;
   background: linear-gradient(90deg, #f44336, #ff9800, #ffeb3b, #4caf50, #2196f3);
-  border-radius: 0.5rem 0.5rem 0 0;
+  border-radius: 0.25rem 0.25rem 0 0;
 }
 .star-icon {
   position: absolute;
-  top: 0.3rem;
-  right: 0.4rem;
+  top: 0.15rem;
+  right: 0.2rem;
   color: #ffc107;
-  font-size: 0.4rem;
+  font-size: 0.2rem;
 }
 .card-img {
   width: 100%;
-  border-radius: 0.3rem;
+  border-radius: 0.15rem;
   overflow: hidden;
   aspect-ratio: 16/10;
-  margin-top: 0.2rem;
+  margin-top: 0.1rem;
 }
 .card-img img { width: 100%; height: 100%; object-fit: cover; }
-.disclaimer { font-size: 0.26rem; color: #999; margin: 0.2rem 0; }
-.copy { font-size: 0.34rem; line-height: 1.5; margin-bottom: 0.2rem; }
+.disclaimer { font-size: 0.13rem; color: #999; margin: 0.1rem 0; }
+.copy { font-size: 0.17rem; line-height: 1.5; margin-bottom: 0.1rem; }
 .tag-row {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 0.3rem;
-  margin-bottom: 0.2rem;
+  gap: 0.15rem;
+  margin-bottom: 0.1rem;
 }
 .tag {
-  padding: 0.1rem 0.3rem;
+  padding: 0.05rem 0.15rem;
   background: #bbdefb;
   color: #1565c0;
-  border-radius: 0.3rem;
-  font-size: 0.28rem;
+  border-radius: 0.15rem;
+  font-size: 0.14rem;
 }
 .qrcode-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.qrcode-wrap canvas { width: 1.2rem; height: 1.2rem; }
-.qr-tip { font-size: 0.24rem; color: #666; }
-.time { font-size: 0.26rem; color: #999; margin-bottom: 0.3rem; }
-.save-tip { font-size: 0.26rem; color: #666; margin-bottom: 0.3rem; }
+.qrcode-wrap canvas { width: 0.6rem; height: 0.6rem; }
+.qr-tip { font-size: 0.12rem; color: #666; }
+.time { font-size: 0.13rem; color: #999; margin-bottom: 0.15rem; }
+.save-tip { font-size: 0.13rem; color: #666; margin-bottom: 0.15rem; }
 .share-icons {
   display: flex;
   justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 0.3rem;
+  gap: 0.25rem;
+  margin-bottom: 0.15rem;
 }
 .icon-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 0.26rem;
+  font-size: 0.13rem;
   color: #666;
 }
-.icon-item .icon { font-size: 0.6rem; margin-bottom: 0.1rem; }
+.icon-item .icon { font-size: 0.3rem; margin-bottom: 0.05rem; }
 .poster-btn {
   width: 100%;
-  padding: 0.4rem;
+  padding: 0.2rem;
   background: #1565c0;
   color: #fff;
   border: none;
-  border-radius: 0.5rem;
-  font-size: 0.36rem;
+  border-radius: 0.25rem;
+  font-size: 0.18rem;
   cursor: pointer;
 }
 </style>

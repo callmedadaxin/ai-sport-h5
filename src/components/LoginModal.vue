@@ -99,75 +99,75 @@ async function submit() {
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  padding: 0.5rem;
+  padding: 0.25rem;
 }
 .login-box {
   width: 100%;
-  max-width: 20rem;
+  max-width: 10rem;
   background: #fff;
-  border-radius: 0.6rem;
-  padding: 0.8rem 0.6rem;
+  border-radius: 0.3rem;
+  padding: 0.4rem 0.3rem;
   position: relative;
 }
 .close-btn {
   position: absolute;
-  top: 0.4rem;
-  right: 0.4rem;
-  width: 0.8rem;
-  height: 0.8rem;
+  top: 0.2rem;
+  right: 0.2rem;
+  width: 0.4rem;
+  height: 0.4rem;
   border: none;
   background: none;
-  font-size: 0.6rem;
+  font-size: 0.3rem;
   color: #999;
   cursor: pointer;
 }
-.title { font-size: 0.52rem; margin-bottom: 0.2rem; text-align: center; }
-.subtitle { font-size: 0.32rem; color: #666; text-align: center; margin-bottom: 0.5rem; }
+.title { font-size: 0.26rem; margin-bottom: 0.1rem; text-align: center; }
+.subtitle { font-size: 0.16rem; color: #666; text-align: center; margin-bottom: 0.25rem; }
 .form .field {
   display: flex;
   align-items: center;
   border: 1px solid #eee;
-  border-radius: 0.4rem;
-  padding: 0 0.3rem;
-  margin-bottom: 0.3rem;
+  border-radius: 0.2rem;
+  padding: 0 0.15rem;
+  margin-bottom: 0.15rem;
 }
-.form .field .icon { margin-right: 0.2rem; font-size: 0.4rem; }
+.form .field .icon { margin-right: 0.1rem; font-size: 0.2rem; }
 .form .field input {
   flex: 1;
   border: none;
-  padding: 0.36rem 0;
-  font-size: 0.36rem;
+  padding: 0.18rem 0;
+  font-size: 0.18rem;
   outline: none;
 }
 .code-btn {
-  padding: 0.2rem 0.3rem;
+  padding: 0.1rem 0.15rem;
   background: #e3f2fd;
   color: #1976d2;
   border: none;
-  border-radius: 0.3rem;
-  font-size: 0.28rem;
+  border-radius: 0.15rem;
+  font-size: 0.14rem;
   white-space: nowrap;
 }
 .code-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .submit-btn {
   width: 100%;
-  padding: 0.36rem;
+  padding: 0.18rem;
   background: linear-gradient(135deg, #1e88e5, #1565c0);
   color: #fff;
   border: none;
-  border-radius: 0.4rem;
-  font-size: 0.38rem;
-  margin-top: 0.3rem;
+  border-radius: 0.2rem;
+  font-size: 0.19rem;
+  margin-top: 0.15rem;
   cursor: pointer;
 }
 .submit-btn:disabled { opacity: 0.8; }
 .agree {
   display: flex;
   align-items: center;
-  margin-top: 0.3rem;
-  font-size: 0.26rem;
+  margin-top: 0.15rem;
+  font-size: 0.13rem;
   color: #666;
   cursor: pointer;
 }
-.agree input { margin-right: 0.2rem; }
+.agree input { margin-right: 0.1rem; }
 </style>

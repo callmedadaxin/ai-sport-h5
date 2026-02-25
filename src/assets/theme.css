@@ -1,0 +1,92 @@
+/**
+ * 主题变量 - 统一维护，全 rem 兼容移动端多机型
+ * 设计基准：375px = 3.75rem（1rem = 100px，设计稿多少 px 就写 0.01*px rem，如 35px → 0.35rem）
+ */
+
+:root {
+  /* ========== 颜色 ========== */
+  /* 主色 - 红色系（设计稿主色） */
+  --color-primary: #e41208;
+  --color-primary-light: #ff4d38;
+  --color-primary-dark: #c3351f;
+  /* 渐变 - Banner / 主按钮 */
+  --gradient-hero: linear-gradient(222.67deg, rgb(255, 64, 41) 24.33%, rgb(255, 77, 56) 52.77%, rgb(255, 99, 80) 81.21%);
+  --gradient-cta: linear-gradient(-83.59deg, rgb(233, 71, 106) 5.64%, rgb(249, 202, 163) 93.86%);
+  /* 辅助色 */
+  --color-cta-border: #f7b49a;
+  --color-make-btn: #fb584d;
+  --color-steps-bg: #ffeeec;
+  /* 中性色 */
+  --color-white: #fff;
+  --color-text-primary: #232323;
+  --color-text-secondary: #666;
+  --color-text-tertiary: #999;
+  --color-text-inverse: #fff;
+  /* 背景 */
+  --color-bg-page: #e8e8e8;
+  --color-bg-card: #fff;
+  --color-border: #eee;
+
+  /* ========== 字体 ========== */
+  --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-family-title: 'PangMenZhengDao', var(--font-family-base);
+  /* 字号（rem，1rem=100px） */
+  --font-size-xs: 0.1rem;
+  --font-size-sm: 0.12rem;
+  --font-size-md: 0.13rem;
+  --font-size-base: 0.14rem;
+  --font-size-lg: 0.16rem;
+  --font-size-xl: 0.18rem;
+  --font-size-2xl: 0.2rem;
+  --font-size-hero-sub: 0.4rem;
+  --font-size-hero-main: 0.5rem;
+  --font-size-section: 0.2rem;
+  /* 字重 */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  /* 行高 */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+
+  /* ========== 间距（rem） ========== */
+  --space-xs: 0.05rem;
+  --space-sm: 0.075rem;
+  --space-md: 0.1rem;
+  --space-lg: 0.15rem;
+  --space-xl: 0.2rem;
+  --space-2xl: 0.25rem;
+  --space-3xl: 0.3rem;
+  --space-page-h: 0.2rem;
+  --space-page-v: 0.25rem;
+
+  /* ========== 圆角（rem） ========== */
+  --radius-sm: 0.1rem;
+  --radius-md: 0.11rem;
+  --radius-base: 0.15rem;
+  --radius-lg: 0.2rem;
+  --radius-xl: 0.24rem;
+  --radius-2xl: 0.25rem;
+  --radius-pill: 1rem;
+  /* Banner 底部不规则圆角用数值 */
+  --radius-banner-bl: 0.4rem;
+  --radius-banner-br: 0.8rem;
+
+  /* ========== 阴影 ========== */
+  --shadow-card: 0 0.06rem 0.12rem rgba(166, 17, 17, 0.2);
+  --shadow-text-hero: 0 0.04rem 0.02rem var(--color-primary-dark), 0 0.03rem 0 var(--color-primary-light), 0 0.01rem 0 #ffc251;
+  --shadow-text-light: 0 0.01rem 0.02rem rgba(144, 0, 0, 0.4);
+  --shadow-inset-btn: inset 0 0.01rem 0.1rem 0 var(--color-white);
+
+  /* ========== 安全区（多机型刘海/底部横条） ========== */
+  --safe-top: constant(safe-area-inset-top);
+  --safe-top-env: env(safe-area-inset-top);
+  --safe-bottom: constant(safe-area-inset-bottom);
+  --safe-bottom-env: env(safe-area-inset-bottom);
+
+  /* ========== 布局 ========== */
+  --page-max-width: 6.4rem;
+  --header-height: 0.5rem;
+  --touch-min: 0.44rem;
+}

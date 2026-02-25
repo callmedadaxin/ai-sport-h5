@@ -39,17 +39,17 @@ provide('openLogin', openLogin)
 html, body, #app {
   width: 100%;
   min-height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  color: #333;
+  font-family: var(--font-family-base);
+  color: var(--color-text-primary);
   -webkit-tap-highlight-color: transparent;
 }
 /* PC 访问时页面居中，最大宽度 640px，两侧留灰底 */
 body {
   overflow-x: hidden;
-  background: #e8e8e8;
+  background: var(--color-bg-page);
 }
 .app {
-  background: #fff;
-  font-size: 0.28rem;
+  background: var(--color-bg-card);
+  font-size: var(--font-size-base);
 }
 </style>

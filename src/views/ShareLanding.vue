@@ -57,11 +57,11 @@ function goMake() {
 .share-landing {
   min-height: 100vh;
   background: #0d47a1;
-  padding: 0.5rem;
+  padding: 0.25rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-bottom: 2rem;
+  padding-bottom: 1rem;
 }
 .bg {
   position: fixed;
@@ -75,11 +75,11 @@ function goMake() {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 21rem;
+  max-width: 10.5rem;
   background: #f5f5f5;
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
   overflow: hidden;
-  margin-top: 0.6rem;
+  margin-top: 0.3rem;
 }
 .video-wrap {
   position: relative;
@@ -95,37 +95,37 @@ function goMake() {
   justify-content: center;
   background: rgba(0,0,0,0.3);
   color: #fff;
-  font-size: 0.8rem;
+  font-size: 0.4rem;
 }
 .card-title {
-  padding: 0.4rem;
-  font-size: 0.44rem;
+  padding: 0.2rem;
+  font-size: 0.22rem;
   text-align: center;
   color: #333;
 }
 .card-sub {
-  padding: 0 0.4rem 0.4rem;
-  font-size: 0.32rem;
+  padding: 0 0.2rem 0.2rem;
+  font-size: 0.16rem;
   color: #666;
   text-align: center;
 }
 .make-btn {
   position: relative;
   z-index: 1;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   width: 100%;
-  max-width: 21rem;
-  padding: 0.4rem;
+  max-width: 10.5rem;
+  padding: 0.2rem;
   background: #1565c0;
   color: #fff;
   border: none;
-  border-radius: 0.5rem;
-  font-size: 0.38rem;
+  border-radius: 0.25rem;
+  font-size: 0.19rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.2rem;
+  gap: 0.1rem;
   cursor: pointer;
 }
-.btn-icon { font-size: 0.36rem; }
+.btn-icon { font-size: 0.18rem; }
 </style>
