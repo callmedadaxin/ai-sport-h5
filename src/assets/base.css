@@ -1,6 +1,6 @@
-/* 移动端 rem 适配：设计稿 375px 宽 = 3.75rem，即 1rem = 100vw/3.75，任意屏宽下 3.75rem = 100vw */
+/* 移动端 rem 适配：设计稿 375px 宽 = 3.75rem，即 1rem = 100vw/3.75；最大按 600px 宽封顶，大屏不再放大 */
 html {
-  font-size: calc(100vw / 3.75);
+  font-size: min(calc(100vw / 3.75), 100px); /* 600/3.75 = 160 */
 }
 .app {
   min-height: 100vh;

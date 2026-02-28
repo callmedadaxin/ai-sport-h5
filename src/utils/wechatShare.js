@@ -85,20 +85,21 @@ export function initWxShare(config) {
 
 /**
  * 从服务端拉取当前页的微信签名并初始化分享（推荐使用）
- * 会请求 GET /api/share/wechat/signature?url=当前页完整 URL（不含 hash），用返回的 appId/timestamp/nonceStr/signature 做 wx.config，再设置分享文案。
+ * 签名始终用「当前页完整 URL（不含 hash）」请求，以满足 JSSDK 校验；分享卡片的 link 可用 shareOptions.link 单独指定。
  *
  * @param {Object} [shareOptions] - 分享文案，与 initWxShare 的 title/desc/link/imgUrl 一致
  * @param {string} [shareOptions.title]
  * @param {string} [shareOptions.desc]
- * @param {string} [shareOptions.link] - 默认当前页 URL（不含 hash）
+ * @param {string} [shareOptions.link] - 分享卡片跳转链接，默认当前页 URL（不含 hash）
  * @param {string} [shareOptions.imgUrl]
  * @returns {Promise<void>}
  */
 export async function initWxShareFromApi(shareOptions = {}) {
-  const link = shareOptions.link ?? (typeof location !== 'undefined' ? location.href.split('#')[0] : '')
+  const currentPageUrl = typeof location !== 'undefined' ? location.href.split('#')[0] : ''
+  const shareLink = shareOptions.link ?? currentPageUrl
   const { shareApi } = await import('../api')
   try {
-    const data = await shareApi.getWechatSignature(link)
+    const data = await shareApi.getWechatSignature(currentPageUrl)
 
     console.log('微信签名', data)
     const { appId, timestamp, nonceStr, signature } = data
@@ -109,7 +110,7 @@ export async function initWxShareFromApi(shareOptions = {}) {
       signature,
       title: shareOptions.title ?? (typeof document !== 'undefined' ? document.title : ''),
       desc: shareOptions.desc ?? '',
-      link,
+      link: shareLink,
       imgUrl: shareOptions.imgUrl ?? '',
     })
   } catch (err) {

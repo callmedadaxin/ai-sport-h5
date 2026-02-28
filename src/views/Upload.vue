@@ -5,6 +5,28 @@
     title="请选择您的照片"
     @update:model-value="$emit('update:modelValue', $event)"
   >
+    <template #close>
+      <button
+        type="button"
+        class="sheet-delete-btn"
+        aria-label="删除"
+        :disabled="selectedIndex < 0"
+        @click="clearPhoto"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="10"
+          height="12"
+          viewBox="0 0 10 12"
+          fill="none"
+        >
+          <path
+            d="M0 2.3381V1.45003C0 1.18215 0.222935 0.966686 0.496742 0.966686H3.34852V0.483343C3.34852 0.215466 3.57146 0 3.84526 0H6.10005C6.37535 0 6.59679 0.216922 6.59679 0.483343V0.966686H9.44857C9.72387 0.966686 9.94531 1.18361 9.94531 1.45003V2.3381H0ZM8.55683 10.6641C8.55683 10.932 8.33389 11.1475 8.06009 11.1475H1.88971C1.61441 11.1475 1.39297 10.9305 1.39297 10.6641L0.397992 2.67731H9.55181L8.55683 10.6641ZM3.58193 4.51605C3.58193 4.24818 3.35899 4.03271 3.08519 4.03271C2.80988 4.03271 2.58844 4.24963 2.58844 4.51605V9.35676C2.58844 9.62464 2.81138 9.84011 3.08519 9.84011C3.36049 9.84011 3.58193 9.62318 3.58193 9.35676V4.51605ZM5.43873 4.51605C5.43873 4.24818 5.21579 4.03271 4.94198 4.03271C4.66668 4.03271 4.44524 4.24963 4.44524 4.51605V9.35676C4.44524 9.62464 4.66818 9.84011 4.94198 9.84011C5.21729 9.84011 5.43873 9.62318 5.43873 9.35676V4.51605ZM7.32994 4.51605C7.32994 4.24818 7.107 4.03271 6.83319 4.03271C6.55789 4.03271 6.33645 4.24963 6.33645 4.51605V9.35676C6.33645 9.62464 6.55939 9.84011 6.83319 9.84011C7.1085 9.84011 7.32994 9.62318 7.32994 9.35676V4.51605Z"
+            fill="white"
+          />
+        </svg>
+      </button>
+    </template>
     <!-- <template #title>
       <div class="upload-nav">
         <button type="button" class="upload-back" aria-label="关闭" @click="close">‹</button>
@@ -21,7 +43,7 @@
         <div class="photo-list">
           <div class="photo-item add" @click="showPhotoSourceSheet = true">
             <span class="camera-icon">📷</span>
-            <span>拍摄人像照片</span>
+            <span class="camera-text">拍摄人像照片</span>
           </div>
           <div
             v-for="(img, idx) in photoList"
@@ -84,14 +106,16 @@
     </div>
   </BottomSheet>
 
-  <Transition name="fade">
-    <div v-show="submitLoading" class="submit-loading-mask">
-      <div class="submit-loading-box">
-        <div class="submit-loading-spinner" />
-        <span class="submit-loading-text">提交中...</span>
+  <Teleport to="body">
+    <Transition name="fade">
+      <div v-show="submitLoading" class="submit-loading-mask">
+        <div class="submit-loading-box">
+          <div class="submit-loading-spinner" />
+          <span class="submit-loading-text">提交中...</span>
+        </div>
       </div>
-    </div>
-  </Transition>
+    </Transition>
+  </Teleport>
 
   <!-- 1:1 裁剪弹窗：全屏浮层 -->
   <Teleport to="body">
@@ -181,9 +205,10 @@ watch(cropImageSrc, src => {
     if (!cropImgRef.value) return
     cropperInstance = new Cropper(cropImgRef.value, {
       aspectRatio: 1,
-      viewMode: 3, // 图片不能小于裁剪框，始终填满裁剪区域
+      viewMode: 1, // 图片不能小于裁剪框，始终填满裁剪区域
       dragMode: 'move',
       autoCropArea: 1,
+      responsive: false,
       restore: false,
       guides: false,
       center: true,
@@ -197,16 +222,39 @@ watch(cropImageSrc, src => {
       rotatable: false,
       toggleDragModeOnDblclick: false,
       ready() {
-        // 用 JS 让裁剪框比屏幕略窄（不依赖 crop-wrap 的 width/padding）
-        const containerData = this.getContainerData()
-        const narrow = 40 // 左右各留出 20px 视觉边距，使裁剪框略窄于容器
-        const boxSize = Math.min(containerData.width, containerData.height) - narrow
-        this.setCropBoxData({
-          left: (containerData.width - boxSize) / 2,
-          top: (containerData.height - boxSize) / 2,
-          width: boxSize,
-          height: boxSize,
+        const containerData = cropperInstance.getContainerData()
+
+        // 固定裁剪框大小为300x300（像素固定值）
+        // const fixedBoxSize = 300
+
+        // 或者基于屏幕宽度计算（比屏幕窄40px）
+        const fixedBoxSize = Math.min(containerData.width, containerData.height) - 40
+
+        console.log(fixedBoxSize)
+
+        // 设置裁剪框
+        cropperInstance.setCropBoxData({
+          left: (containerData.width - fixedBoxSize) / 2,
+          top: (containerData.height - fixedBoxSize) / 2,
+          width: fixedBoxSize,
+          height: fixedBoxSize,
         })
+
+        // 设置默认缩放比例（让图片填满裁剪框并有溢出）
+        setTimeout(() => {
+          // 直接放大图片到合适的比例
+          cropperInstance.zoom(0.5) // 放大50%
+
+          // 或者使用 zoomTo 设置具体倍数
+          // cropperInstance.zoomTo(1.5) // 放大到1.5倍
+
+          // 确保图片居中
+          const canvasData = cropperInstance.getCanvasData()
+          cropperInstance.setCanvasData({
+            left: (containerData.width - canvasData.width) / 2,
+            top: (containerData.height - canvasData.height) / 2,
+          })
+        }, 100)
       },
     })
   })
@@ -315,6 +363,28 @@ function submit() {
   color: #fff;
 }
 
+.sheet-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.25rem;
+  height: 0.25rem;
+  padding: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-right: 0.1rem;
+}
+.sheet-delete-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.4);
+}
+.sheet-delete-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .upload-sheet-inner {
   position: relative;
   flex: 1;
@@ -379,7 +449,7 @@ function submit() {
   width: 0.4rem;
   height: 0.4rem;
   border: 3px solid #e0e0e0;
-  border-top-color: #1565c0;
+  border-top-color: #ff4029;
   border-radius: 50%;
   animation: submit-spin 0.8s linear infinite;
 }
@@ -461,8 +531,9 @@ function submit() {
   cursor: pointer;
 }
 .photo-item.add {
-  background: #f5f5f5;
+  /* background: #f5f5f5; */
   border-style: dashed;
+  border-color: #c8d2df;
 }
 .photo-item.selected {
   border: 2px solid #f69b88;
@@ -474,7 +545,17 @@ function submit() {
   object-fit: cover;
 }
 .camera-icon {
-  font-size: 0.25rem;
+  width: 0.52rem;
+  height: 0.52rem;
+  background-image: url(../assets/image/photo.svg);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+  margin-bottom: 0.05rem;
+}
+.camera-text {
+  font-size: 0.12rem;
+  color: #666;
 }
 .hidden-input {
   position: absolute;
@@ -585,15 +666,26 @@ function submit() {
 .crop-wrap {
   flex: 1;
   min-height: 0;
+  height: 100vh;
   width: 100%;
   background: #000;
   overflow: hidden;
 }
-.crop-wrap .crop-img {
+/* 固定 1:1 正方形：宽高均为屏幕宽度（取 min(100vw,100vh) 保证不超出视口），图片在框内由 Cropper 拖动且不超出框 */
+/* .crop-wrap-inner {
+  width: min(100vw, 100vh);
+  height: min(100vw, 100vh);
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+  touch-action: none;
+} */
+.crop-wrap-inner .crop-img {
   display: block;
-  max-width: 100%;
-  max-height: 100%;
+  /* max-width: 100%; */
+  /* max-height: 100%; */
 }
+
 /* 裁剪框仅作显示，不可拖动：事件穿透到下方图片 */
 .crop-wrap :deep(.cropper-crop-box) {
   pointer-events: none;

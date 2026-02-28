@@ -79,9 +79,17 @@ export const worksApi = {
 }
 
 /** 微信分享签名：GET /share/wechat/signature?url=当前页完整 URL（不含 hash） */
+/** 抖音 H5 分享签名：GET /share/douyin/signature，返回 clientKey、nonceStr、timestamp、signature */
 export const shareApi = {
   getWechatSignature(url) {
     return request.get('/share/wechat/signature', { params: { url } })
+  },
+  getDouyinSignature() {
+    return request.get('/share/douyin/signature')
+  },
+  /** 上传海报图并返回公网 URL，供抖音 image_path 使用。若后端未实现可留空，前端将使用封面图 */
+  uploadPoster(dataUrl) {
+    return request.post('/share/poster/upload', { imageBase64: dataUrl })
   },
 }
 

@@ -31,11 +31,11 @@
           class="video"
           loop
           playsinline
-          webkit-playsinline
+          preload="metadata"
           @play="playing = true"
           @pause="playing = false"
         />
-        <div v-show="!playing" class="play-btn">
+        <div v-show="!playing" class="play-btn" @click="togglePlay">
           <span class="play-icon" />
         </div>
       </div>
@@ -137,11 +137,19 @@ onMounted(() => {
 })
 
 function togglePlay() {
-  if (!videoEl.value || !detail.value?.videoUrl) return
+  const video = videoEl.value
+  if (!video || !detail.value?.videoUrl) return
   if (playing.value) {
-    videoEl.value.pause()
+    video.pause()
   } else {
-    videoEl.value.play().catch(() => {})
+    const playPromise = video.play()
+    if (playPromise && typeof playPromise.then === 'function') {
+      playPromise.catch(() => {
+        // 部分浏览器要求静音才能播放，先静音再试
+        video.muted = true
+        video.play().catch(() => {})
+      })
+    }
   }
 }
 

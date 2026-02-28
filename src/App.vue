@@ -36,6 +36,10 @@ provide('openLogin', openLogin)
 
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
+/* 强制浅色模式，避免系统/浏览器深色模式把背景变黑 */
+html {
+  color-scheme: only light;
+}
 html, body, #app {
   width: 100%;
   min-height: 100%;
@@ -46,10 +50,12 @@ html, body, #app {
 /* PC 访问时页面居中，最大宽度 640px，两侧留灰底 */
 body {
   overflow-x: hidden;
+  background: #e8e8e8;
   background: var(--color-bg-page);
 }
 .app {
-  background: var(--color-bg-card);
+  background: #fff;
+  background: #FFF;
   font-size: var(--font-size-base);
 }
 </style>

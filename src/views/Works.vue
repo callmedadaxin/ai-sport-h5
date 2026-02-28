@@ -1,7 +1,7 @@
 <template>
   <div class="page-wrap works">
     <header class="nav">
-      <i class="back" @click="router.back()"></i>
+      <i class="back" @click="router.push('/')"></i>
       <h1 class="title">作品中心</h1>
     </header>
     <div class="user-info">
@@ -17,9 +17,9 @@
           <i class="icon-loading"></i>
           正在生成中
         </h3>
-        <button type="button" class="refresh" @click="load">
-          <i class="icon-refresh"></i>
-          刷新进度
+        <button type="button" class="refresh" :disabled="refreshLoading" @click="load">
+          <i :class="refreshLoading ? 'icon-loading' : 'icon-refresh'"></i>
+          {{ refreshLoading ? '刷新中...' : '刷新进度' }}
         </button>
       </div>
       <div v-for="item in generating" :key="item.taskId" class="gen-card">
@@ -83,8 +83,10 @@ const router = useRouter()
 const generating = ref([])
 const done = ref([])
 const totalCount = ref(0)
+const refreshLoading = ref(false)
 
 function load() {
+  refreshLoading.value = true
   worksApi
     .list()
     .then(res => {
@@ -93,6 +95,9 @@ function load() {
       totalCount.value = res.totalCount ?? done.value.length
     })
     .catch(() => {})
+    .finally(() => {
+      refreshLoading.value = false
+    })
 }
 
 onMounted(load)
@@ -186,6 +191,12 @@ onMounted(load)
   background-position: center center;
   vertical-align: top;
   margin-top: -0.02rem;
+  animation: icon-loading-spin 0.8s linear infinite;
+}
+@keyframes icon-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .icon-refresh {
   display: inline-flex;
@@ -207,6 +218,10 @@ onMounted(load)
   display: flex;
   align-items: center;
   gap: 0.05rem;
+}
+.refresh:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 .gen-card {
   padding: 0.15rem;

@@ -4,6 +4,7 @@
  */
 
 :root {
+  color-scheme: only light;
   /* ========== 颜色 ========== */
   /* 主色 - 红色系（设计稿主色） */
   --color-primary: #e41208;

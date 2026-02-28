@@ -7,8 +7,50 @@
 
 import { showToast } from './toast'
 
-/** 抖音 H5 分享 Schema 前缀 */
+/** 抖音 H5 分享 Schema 前缀（文档要求 iOS/Android 使用该头） */
 const DOUYIN_SCHEMA_PREFIX = 'snssdk1128://openplatform/share'
+
+/**
+ * 根据签名数据与图片 URL 构建抖音 H5 分享 Schema（分享到抖音编辑页）
+ * 文档：https://developer.open-douyin.com/docs/resource/zh-CN/dop/develop/sdk/web-app/h5/share-to-h5
+ * 注意：分享到发布页（share_to_publish=1）仅支持单视频，图片走编辑页流程。
+ *
+ * @param {Object} sign - 接口 GET /share/douyin/signature 返回的 data
+ * @param {string} sign.clientKey
+ * @param {string} sign.nonceStr
+ * @param {string} sign.timestamp
+ * @param {string} sign.signature
+ * @param {string} imagePath - 图片公网 URL（必填，与 video_path 二选一；iOS 不支持含中文的 URL，需编码）
+ * @returns {string} 完整 schema URL
+ */
+export function buildDouyinShareSchema(sign, imagePath) {
+  if (!sign || !imagePath) return ''
+  // const params = {
+  //   share_type: 'h5',
+  //   client_key: sign.clientKey,
+  //   nonce_str: sign.nonceStr,
+  //   timestamp: String(sign.timestamp),
+  //   signature: sign.signature,
+  //   image_path: imagePath,
+  // }
+
+  const schema = window.dy_open_util.serialize({
+    share_type: "h5",
+    client_key: sign.clientKey,
+    nonce_str: sign.nonceStr,
+    timestamp: sign.timestamp,
+    signature: sign.signature,
+    image_path: imagePath,
+    share_to_publish: 0,
+    hashtag_list: JSON.stringify(["皖美运动汇", "我为家乡代言", "到安徽打球去"]),
+  });
+  return schema;
+}
+//   const query = Object.entries(params)
+//     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+//     .join('&')
+//   return `${DOUYIN_SCHEMA_PREFIX}?${query}`
+// }
 
 /**
  * 是否在抖音内置浏览器内
@@ -94,6 +136,7 @@ export async function shareWebPageToDouyin(options = {}) {
 
 export default {
   isDouyin,
+  buildDouyinShareSchema,
   shareImageToDouyin,
   shareWebPageToDouyin,
 }
