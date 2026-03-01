@@ -54,20 +54,63 @@
       </div>
     </section>
     <section class="section">
-      <h3 class="section-title">我的代言库({{ done.length }})</h3>
-      <div v-for="w in done" :key="w.id" class="work-card">
+      <div class="section-head section-head-filter">
+        <h3 class="section-title">我的代言库({{ filteredDone.length }})</h3>
+        <div class="filter-tabs">
+          <button
+            type="button"
+            class="filter-tab"
+            :class="{ active: statusFilter === 'all' }"
+            @click="statusFilter = 'all'"
+          >
+            全部
+          </button>
+          <button
+            type="button"
+            class="filter-tab"
+            :class="{ active: statusFilter === 'done' }"
+            @click="statusFilter = 'done'"
+          >
+            生成成功
+          </button>
+          <button
+            type="button"
+            class="filter-tab"
+            :class="{ active: statusFilter === 'failed' }"
+            @click="statusFilter = 'failed'"
+          >
+            生成失败
+          </button>
+        </div>
+      </div>
+      <div v-for="w in filteredDone" :key="w.id" class="work-card" :class="{ 'is-failed': w.status === 'failed' }">
         <img
           :src="w.coverUrl || 'https://picsum.photos/200/150?random=' + w.id"
           alt=""
           class="work-thumb"
         />
+        <div v-if="w.status === 'failed'" class="work-failed-mask">生成失败</div>
         <div class="work-info">
           <div>
             <p class="work-title">{{ w.templateTitle }}</p>
-            <p class="work-time">生成于{{ w.completedAt }}</p>
+            <p v-if="w.status === 'done'" class="work-time">生成于 {{ w.completedAt }}</p>
+            <p v-else class="work-time work-time-failed">生成失败，可重新制作</p>
           </div>
 
-          <button class="detail-btn" @click="router.push('/works/' + w.id)">查看详情</button>
+          <button
+            v-if="w.status === 'done'"
+            class="detail-btn"
+            @click="router.push('/works/' + w.id)"
+          >
+            查看详情
+          </button>
+          <button
+            v-else
+            class="detail-btn detail-btn-ghost"
+            @click="router.push('/template/' + w.templateId)"
+          >
+            重新制作
+          </button>
         </div>
       </div>
     </section>
@@ -75,7 +118,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { worksApi } from '../api'
 
@@ -84,6 +127,14 @@ const generating = ref([])
 const done = ref([])
 const totalCount = ref(0)
 const refreshLoading = ref(false)
+/** 筛选：'all' | 'done' | 'failed' */
+const statusFilter = ref('all')
+
+const filteredDone = computed(() => {
+  const list = done.value || []
+  if (statusFilter.value === 'all') return list
+  return list.filter(w => (w.status || 'done') === statusFilter.value)
+})
 
 function load() {
   refreshLoading.value = true
@@ -173,6 +224,50 @@ onMounted(load)
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.15rem;
+}
+.section-head-filter {
+  display: block !important;
+  flex-wrap: wrap;
+  gap: 0.12rem;
+}
+.filter-tabs {
+  display: flex;
+  gap: 0.06rem;
+}
+.filter-tab {
+  padding: 0.06rem 0.12rem;
+  font-size: 0.12rem;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.25);
+  border: none;
+  border-radius: 0.08rem;
+  cursor: pointer;
+}
+.filter-tab.active {
+  background: #fff;
+  color: #ff462f;
+}
+.work-card.is-failed .work-thumb {
+  filter: grayscale(0.6);
+  opacity: 0.85;
+}
+.work-failed-mask {
+  position: absolute;
+  left: 0.1rem;
+  top: 0.1rem;
+  padding: 0.02rem 0.08rem;
+  font-size: 0.11rem;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 0.04rem;
+}
+.work-time-failed {
+  color: #fb584d;
+}
+.detail-btn-ghost {
+  background: transparent;
+  color: #fb584d;
+  border: 1px solid #fb584d;
 }
 .section-title {
   font-size: 0.2rem;
@@ -287,6 +382,7 @@ gap: 0.05rem;
 margin-top: 0.1rem;
 }
 .work-card {
+  position: relative;
   display: flex;
   border-bottom: 1px solid #eee;
   background: #fff;

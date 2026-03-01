@@ -31,7 +31,7 @@
             </clipPath>
           </defs>
         </svg>
-        视频正努力制作
+        {{ workTypeLabel }}
       </p>
 
       <p class="status-title-desc">请耐心等候</p>
@@ -58,7 +58,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { templateApi, worksApi } from '../api'
 
@@ -67,12 +67,16 @@ const router = useRouter()
 const avatarUrl = ref('')
 const coverUrl = ref('')
 
+const workTypeLabel = computed(() =>
+  (route.query.type === 'image' ? '图片' : '视频') + '正努力制作'
+)
+
 watch(
-  () => route.query.templateId,
-  templateId => {
+  () => [route.query.templateId, route.query.type],
+  ([templateId, type]) => {
     if (templateId) {
       templateApi
-        .detail(templateId)
+        .detail(templateId, { type: type === 'image' ? 'image' : 'video' })
         .then(d => {
           coverUrl.value = d?.cover || ''
         })
@@ -155,9 +159,15 @@ function toAnother() {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: rgba(0, 0, 0, 0.35);
+  /* backdrop-filter 降级：不支持时使用更不透明的背景 */
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(0.2rem);
   -webkit-backdrop-filter: blur(0.2rem);
+}
+@supports (backdrop-filter: blur(0.2rem)) {
+  .bg-glass {
+    background: rgba(0, 0, 0, 0.35);
+  }
 }
 
 .nav {

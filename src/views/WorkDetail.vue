@@ -1,27 +1,35 @@
 <template>
   <div class="page-wrap work-detail">
-    <!-- 全屏视频背景 -->
-    <div class="bg-video-wrap" @click="togglePlay">
-      <video
-        ref="videoEl"
-        :src="detail?.videoUrl"
-        :poster="detail?.coverUrl"
-        class="bg-video"
-        loop
-        playsinline
-        preload="metadata"
-        @play="playing = true"
-        @pause="playing = false"
-      />
-      <!-- 无视频时用封面图兜底 -->
-      <div
-        v-if="detail?.coverUrl && !detail?.videoUrl"
-        class="bg-cover"
-        :style="detail?.coverUrl ? { backgroundImage: `url(${detail.coverUrl})` } : {}"
-      />
-      <div v-show="!playing" class="play-overlay" @click="togglePlay">
-        <span class="play-icon" />
-      </div>
+    <!-- 全屏展示：视频可播放，图片类型只展示封面 -->
+    <div class="bg-video-wrap" @click="!isImageWork && togglePlay()">
+      <template v-if="isImageWork">
+        <div
+          class="bg-cover"
+          :style="detail?.coverUrl ? { backgroundImage: `url(${detail.coverUrl})` } : {}"
+        />
+      </template>
+      <template v-else>
+        <video
+          ref="videoEl"
+          :src="detail?.videoUrl"
+          :poster="detail?.coverUrl"
+          class="bg-video"
+          loop
+          playsinline
+          preload="metadata"
+          @play="playing = true"
+          @pause="playing = false"
+        />
+        <!-- 无视频时用封面图兜底 -->
+        <div
+          v-if="detail?.coverUrl && !detail?.videoUrl"
+          class="bg-cover"
+          :style="detail?.coverUrl ? { backgroundImage: `url(${detail.coverUrl})` } : {}"
+        />
+        <div v-show="!playing" class="play-overlay" @click="togglePlay">
+          <span class="play-icon" />
+        </div>
+      </template>
     </div>
 
     <!-- 顶部导航 -->
@@ -47,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { worksApi } from '../api'
 import SharePanel from '../components/SharePanel.vue'
@@ -59,6 +67,8 @@ const playing = ref(false)
 const detail = ref(null)
 const showShare = ref(false)
 const sharePanelRef = ref(null)
+
+const isImageWork = computed(() => (detail.value?.type || 'video') === 'image')
 
 onMounted(() => {
   worksApi.detail(route.params.id).then((d) => { detail.value = d }).catch(() => { detail.value = {} })
@@ -149,10 +159,16 @@ function openShare() {
   position: fixed;
   inset: 0;
   z-index: 0;
-  background: rgba(0, 0, 0, 0.35);
+  /* backdrop-filter 降级：不支持时使用更不透明的背景 */
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(0.2rem);
   -webkit-backdrop-filter: blur(0.2rem);
   pointer-events: none;
+}
+@supports (backdrop-filter: blur(0.2rem)) {
+  .bg-glass {
+    background: rgba(0, 0, 0, 0.35);
+  }
 }
 
 /* 顶部返回 */

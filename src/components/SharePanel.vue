@@ -29,13 +29,24 @@
         </div>
       </div>
     </div>
-    <!-- 分享引导遮罩 -->
+    <!-- 微信分享引导遮罩 -->
     <Teleport to="body">
       <div v-show="showShareGuide" class="share-guide-mask" @click.self="closeShareGuide">
         <img
           src="../assets/guide.png"
           alt=""
           @click.self="closeShareGuide"
+          class="share-guide-img"
+        />
+      </div>
+    </Teleport>
+    <!-- 微信内点击分享抖音时：引导用浏览器打开 -->
+    <Teleport to="body">
+      <div v-show="showDouyinGuide" class="share-guide-mask" @click.self="closeDouyinGuide">
+        <img
+          src="../assets/image/guide-douyin.png"
+          alt="点击右上角，打开浏览器分享抖音"
+          @click.self="closeDouyinGuide"
           class="share-guide-img"
         />
       </div>
@@ -85,7 +96,7 @@ import QRCode from 'qrcode'
 import html2canvas from 'html2canvas'
 import { shareApi } from '../api'
 import { buildDouyinShareSchema, shareImageToDouyin } from '../utils/douyinShare'
-import { initWxShareFromApi } from '../utils/wechatShare'
+import { initWxShareFromApi, isWechat } from '../utils/wechatShare'
 import { showToast } from '../utils/toast'
 
 // 与海报主文案一致，用于微信分享卡片描述
@@ -103,9 +114,14 @@ const qrcodeCanvas = ref(null)
 const posterImageUrl = ref('')
 const douyinSharing = ref(false)
 const showShareGuide = ref(false)
+const showDouyinGuide = ref(false)
 
 function closeShareGuide() {
   showShareGuide.value = false
+}
+
+function closeDouyinGuide() {
+  showDouyinGuide.value = false
 }
 
 const shareUrl = () => {
@@ -185,12 +201,13 @@ async function onShare(type) {
       title: POSTER_TITLE,
       desc: POSTER_COPY,
       link: shareUrl(),
-      // videoUrl: props.detail?.coverUrl,
-      title: props.detail?.title,
-      imgUrl: 'https://jiuzhuokeji.oss-cn-beijing.aliyuncs.com/outer/logo.png',
-      // imgUrl: props.detail?.coverUrl || '',
+      imgUrl: props.detail?.coverUrl || 'https://jiuzhuokeji.oss-cn-beijing.aliyuncs.com/outer/logo.png',
     })
   } else if (type === 'douyin') {
+    if (isWechat()) {
+      showDouyinGuide.value = true
+      return
+    }
     if (douyinSharing.value) return
     douyinSharing.value = true
     try {
@@ -207,13 +224,12 @@ async function onShare(type) {
         return
       }
       const sign = await shareApi.getDouyinSignature()
-      const schemaUrl = buildDouyinShareSchema(sign, imagePath)
+      const schemaUrl = await buildDouyinShareSchema(sign, imagePath)
 
       if (!schemaUrl) {
         showToast('生成分享链接失败')
         return
       }
-      console.log(['schemaUrl', schemaUrl])
       shareImageToDouyin(schemaUrl)
     } catch (e) {
       showToast(e?.message || '获取分享信息失败')

@@ -86,6 +86,9 @@
   --safe-bottom: constant(safe-area-inset-bottom);
   --safe-bottom-env: env(safe-area-inset-bottom);
 
+  /* ========== iOS 100vh 修复 ========== */
+  --vh: 1vh; /* 默认值，由 JavaScript 动态更新 */
+
   /* ========== 布局 ========== */
   --page-max-width: 6.4rem;
   --header-height: 0.5rem;

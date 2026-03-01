@@ -8,8 +8,8 @@
 const DEFAULT_JS_API_LIST = [
   'updateAppMessageShareData',  // 发送给朋友
   'updateTimelineShareData',    // 分享到朋友圈
-  'onMenuShareAppMessage',     // 旧版（兼容）
-'onMenuShareTimeline'
+  'onMenuShareAppMessage',      // 旧版（兼容）
+  'onMenuShareTimeline',
 ]
 
 /**
@@ -101,7 +101,6 @@ export async function initWxShareFromApi(shareOptions = {}) {
   try {
     const data = await shareApi.getWechatSignature(currentPageUrl)
 
-    console.log('微信签名', data)
     const { appId, timestamp, nonceStr, signature } = data
     await initWxShare({
       appId,

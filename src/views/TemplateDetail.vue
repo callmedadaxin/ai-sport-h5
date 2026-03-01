@@ -22,22 +22,30 @@
         <span class="card-title-tag">{{ detail?.tag || detail?.subtitle || '跑步篇' }}</span>
       </div>
 
-      <!-- 视频区：658×349 比例，点击播放 -->
-      <div class="video-wrap" @click="togglePlay">
-        <video
-          ref="videoEl"
-          :src="detail?.videoUrl"
-          :poster="detail?.cover"
-          class="video"
-          loop
-          playsinline
-          preload="metadata"
-          @play="playing = true"
-          @pause="playing = false"
-        />
-        <div v-show="!playing" class="play-btn" @click="togglePlay">
-          <span class="play-icon" />
-        </div>
+      <!-- 视频区：video 类型可播放，image 类型只展示封面图 -->
+      <div class="video-wrap" @click="!isImageTemplate && togglePlay()">
+        <template v-if="isImageTemplate">
+          <div
+            class="video video-placeholder"
+            :style="detail?.cover ? { backgroundImage: `url(${detail.cover})` } : {}"
+          />
+        </template>
+        <template v-else>
+          <video
+            ref="videoEl"
+            :src="detail?.videoUrl"
+            :poster="detail?.cover"
+            class="video"
+            loop
+            playsinline
+            preload="metadata"
+            @play="playing = true"
+            @pause="playing = false"
+          />
+          <div v-show="!playing" class="play-btn" @click="togglePlay">
+            <span class="play-icon" />
+          </div>
+        </template>
       </div>
     </div>
 
@@ -96,7 +104,12 @@
     </BottomSheet>
 
     <!-- 上传照片弹窗 -->
-    <Upload v-model="showUpload" :template-id="id" @success="onUploadSuccess" />
+    <Upload
+      v-model="showUpload"
+      :template-id="id"
+      :template-type="detail?.type || 'video'"
+      @success="onUploadSuccess"
+    />
   </div>
 </template>
 
@@ -117,12 +130,17 @@ const detail = ref(null)
 const showUploadGuide = ref(false)
 const showUpload = ref(false)
 const id = computed(() => route.params.id)
+const isImageTemplate = computed(() => (detail.value?.type || 'video') === 'image')
 
 onMounted(() => {
+  const type = route.query.type === 'image' ? 'image' : 'video'
   templateApi
-    .detail(id.value)
+    .detail(id.value, { type })
     .then(d => {
-      detail.value = d
+      detail.value = {
+        ...(d || {}),
+        type,
+      }
     })
     .catch(() => {
       detail.value = {
@@ -162,7 +180,7 @@ function onUploadSuccess({ taskId }) {
   showUpload.value = false
   router.push({
     path: '/making/' + taskId,
-    query: { templateId: id.value },
+    query: { templateId: id.value, type: detail.value?.type || 'video' },
   })
 }
 </script>
@@ -198,9 +216,15 @@ function onUploadSuccess({ taskId }) {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: rgba(0, 0, 0, 0.35);
+  /* backdrop-filter 降级：不支持时使用更不透明的背景 */
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(0.2rem);
   -webkit-backdrop-filter: blur(0.2rem);
+}
+@supports (backdrop-filter: blur(0.2rem)) {
+  .bg-glass {
+    background: rgba(0, 0, 0, 0.35);
+  }
 }
 
 /* 顶部返回：蓝色方框 + 白色箭头 */
@@ -285,6 +309,14 @@ function onUploadSuccess({ taskId }) {
   object-fit: cover;
   display: block;
   pointer-events: none;
+}
+.video-placeholder {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #000;
 }
 .play-btn {
   position: absolute;

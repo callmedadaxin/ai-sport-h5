@@ -149,6 +149,8 @@ import { templateApi, worksApi } from '../api'
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   templateId: { type: String, default: '' },
+  /** 模板类型：video | image，提交制作时传给后端 */
+  templateType: { type: String, default: 'video' },
 })
 
 const emit = defineEmits(['update:modelValue', 'success'])
@@ -177,7 +179,7 @@ watch(
   visible => {
     if (visible && props.templateId) {
       templateApi
-        .detail(props.templateId)
+        .detail(props.templateId, { type: props.templateType })
         .then(d => {
           detail.value = d
         })
@@ -323,7 +325,7 @@ function submit() {
   } catch (_) {}
   submitLoading.value = true
   worksApi
-    .submit({ templateId: id, image: currentPhoto.value })
+    .submit({ templateId: id, image: currentPhoto.value, type: props.templateType })
     .then(res => {
       emit('update:modelValue', false)
       emit('success', { taskId: res.taskId })
@@ -472,7 +474,18 @@ function submit() {
 }
 .video-wrap {
   position: relative;
-  aspect-ratio: 16/10;
+  /* aspect-ratio 降级方案：iOS 15 以下不支持 */
+  /* 10/16 = 0.625 */
+  padding-top: 62.5%;
+  height: 0;
+}
+/* 支持 aspect-ratio 的浏览器使用原方案 */
+@supports (aspect-ratio: 1 / 1) {
+  .video-wrap {
+    padding-top: 0;
+    height: auto;
+    aspect-ratio: 16/10;
+  }
 }
 .video {
   width: 100%;

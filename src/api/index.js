@@ -55,11 +55,16 @@ export const authApi = {
 }
 
 export const templateApi = {
-  list() {
-    return request.get('/template/list')
+  /** @param {{ type?: 'video' | 'image' }} params - type 默认 video */
+  list(params) {
+    return request.get('/template/list', { params: params || {} })
   },
-  detail(id) {
-    return request.get(`/template/${id}`)
+  /** @param {string} id - 模板ID @param {{ type?: 'video' | 'image' }} params - type 默认 video */
+  detail(id, params) {
+    return request.get(`/template/${id}`, { params: {
+      ...params,
+      id
+    } || {}, })
   },
 }
 
