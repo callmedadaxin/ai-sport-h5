@@ -211,6 +211,8 @@ function onUploadSuccess({ taskId }) {
 /* 背景：全屏视频封面图 */
 .bg-cover {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   inset: 0;
@@ -322,6 +324,8 @@ function onUploadSuccess({ taskId }) {
 }
 .video-poster-cover {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   background-size: 100% 100%;

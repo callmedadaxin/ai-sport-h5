@@ -29,9 +29,9 @@
         </div>
       </div>
     </div>
-    <!-- 隐藏视频，仅用于根据 coverFrame 截取该帧生成海报主图 -->
+    <!-- 移出视口仅用于截帧，不用 v-show 以保证部分浏览器会解码渲染当前帧 -->
     <video
-      v-show="false"
+      class="cover-frame-video"
       ref="coverFrameVideoRef"
       muted
       playsinline
@@ -139,50 +139,149 @@ const posterMainImageSrc = computed(() => {
   return coverFrameImageUrl.value || ''
 })
 
+const MAX_COVER_FRAME_RETRIES = 2
+const BLACK_FRAME_THRESHOLD = 25
+
+/** 检测 canvas 内容是否接近全黑（采样中心与四角区域平均亮度） */
+function isCanvasMostlyBlack(canvas) {
+  const ctx = canvas.getContext('2d')
+  const w = canvas.width
+  const h = canvas.height
+  if (w <= 0 || h <= 0) return true
+  const sampleSize = Math.min(32, Math.floor(w / 4), Math.floor(h / 4))
+  const cx = Math.floor((w - sampleSize) / 2)
+  const cy = Math.floor((h - sampleSize) / 2)
+  const data = ctx.getImageData(cx, cy, sampleSize, sampleSize).data
+  let sum = 0
+  for (let i = 0; i < data.length; i += 4) {
+    sum += (data[i] + data[i + 1] + data[i + 2]) / 3
+  }
+  const avg = data.length > 0 ? sum / (data.length / 4) : 0
+  return avg < BLACK_FRAME_THRESHOLD
+}
+
 function captureVideoFrame() {
   const video = coverFrameVideoRef.value
-
   const d = props.detail
 
-  if (!video || !d?.videoUrl || d?.type === 'image') return
+  if (!video || !d?.videoUrl || d?.type === 'image') {
+    console.log('[SharePanel] captureVideoFrame 提前 return: 无 video/videoUrl 或为图片')
+    return
+  }
   const frameIndex = d.coverFrame != null ? d.coverFrame : 0
-  if (frameIndex < 0) return
+  if (frameIndex < 0) {
+    console.log('[SharePanel] captureVideoFrame 提前 return: frameIndex < 0')
+    return
+  }
 
   coverFrameImageUrl.value = ''
   video.src = d.videoUrl
   video.load()
+  video.play()
+  console.log('[SharePanel] captureVideoFrame video.load() 已调用', { frameIndex, videoUrl: d.videoUrl })
 
   const time = frameIndex / DEFAULT_FPS
+  const frameDuration = 1 / DEFAULT_FPS
+  let retryCount = 0
+  /** 当前尝试的截帧时间（黑帧重试时改为下一帧） */
+  let currentTryTime = time
 
-  const onSeeked = () => {
+  // showToast(time);
+
+  const cleanup = () => {
+    video.removeEventListener('loadedmetadata', onLoadedMetadata)
+    video.removeEventListener('seeked', onSeeked)
+    video.removeEventListener('error', onError)
+  }
+
+  const doCapture = () => {
+    console.log('[SharePanel] doCapture 截帧', { videoWidth: video.videoWidth, videoHeight: video.videoHeight, retryCount })
+    if (video.videoWidth <= 0 || video.videoHeight <= 0) {
+      console.log('[SharePanel] doCapture 尺寸无效，重试或放弃', { retryCount })
+      if (retryCount < MAX_COVER_FRAME_RETRIES) {
+        retryCount++
+        video.currentTime = Math.min(currentTryTime, video.duration - 0.1)
+      } else {
+        cleanup()
+      }
+      return
+    }
     try {
       const canvas = document.createElement('canvas')
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
       const ctx = canvas.getContext('2d')
-      ctx.drawImage(video, 0, 0)
+      ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
+
+      // 1. 检查视频元数据
+    // showToast(video.readyState);
+
+      const isBlack = isCanvasMostlyBlack(canvas)
+      console.log('[SharePanel] doCapture 黑帧检测', { isBlack })
+      if (isBlack) {
+        if (retryCount < MAX_COVER_FRAME_RETRIES) {
+          retryCount++
+          currentTryTime = Math.min(currentTryTime + frameDuration, video.duration - 0.1)
+          video.currentTime = currentTryTime
+          console.log('[SharePanel] doCapture 黑帧重试下一帧', { currentTryTime, retryCount })
+        } else {
+          console.log('[SharePanel] doCapture 黑帧重试用尽，放弃')
+          cleanup()
+        }
+        return
+      }
       coverFrameImageUrl.value = canvas.toDataURL('image/jpeg', 0.92)
+      console.log('[SharePanel] doCapture 成功，已设置 coverFrameImageUrl')
     } catch (_) {
+      console.log('[SharePanel] doCapture catch 异常')
       coverFrameImageUrl.value = ''
     }
-    video.removeEventListener('seeked', onSeeked)
-    video.removeEventListener('error', onError)
+    cleanup()
   }
+
+  const onSeeked = () => {
+    console.log('[SharePanel] video seeked')
+    let done = false
+    const runAfterFrame = () => {
+      if (done) return
+      done = true
+      console.log('[SharePanel] runAfterFrame 执行 doCapture')
+      doCapture()
+    }
+    // requestVideoFrameCallback 在仅 seek 未 play 时可能不触发，加 150ms 超时回退
+    if (typeof video.requestVideoFrameCallback === 'function') {
+      let fallbackTimer = setTimeout(runAfterFrame, 150)
+      try {
+        video.requestVideoFrameCallback(() => {
+          clearTimeout(fallbackTimer)
+          runAfterFrame()
+        })
+      } catch (_) {
+        clearTimeout(fallbackTimer)
+        requestAnimationFrame(() => requestAnimationFrame(runAfterFrame))
+      }
+    } else {
+      requestAnimationFrame(() => requestAnimationFrame(runAfterFrame))
+    }
+  }
+
   const onError = () => {
+    console.log('[SharePanel] video error')
     coverFrameImageUrl.value = ''
-    video.removeEventListener('seeked', onSeeked)
-    video.removeEventListener('error', onError)
+    cleanup()
   }
-  // 第一步：等待元数据加载完成
+
   const onLoadedMetadata = () => {
-    const safeTime = Math.min(time, video.duration - 0.1)
-    video.currentTime = safeTime
+    // showToast('loadedmetadata');
+    console.log('[SharePanel] video loadedmetadata', { duration: video.duration })
+    // showToast(time);
+    // currentTryTime = Math.min(time, video.duration - 0.1)
+    video.currentTime = time
   }
 
   video.addEventListener('loadedmetadata', onLoadedMetadata)
   video.addEventListener('seeked', onSeeked)
   video.addEventListener('error', onError)
-  // video.currentTime = time
 }
 
 function closeShareGuide() {
@@ -211,8 +310,10 @@ watch(
       props.detail?.videoUrl !== null &&
       coverFrameVideoRef.value !== null
     ) {
+      console.log('[SharePanel] watch 触发 captureVideoFrame')
       captureVideoFrame()
     } else {
+      console.log('[SharePanel] watch 清空 coverFrameImageUrl')
       coverFrameImageUrl.value = ''
     }
   },
@@ -228,17 +329,21 @@ function drawQr() {
 }
 
 function waitForCoverFrame(timeoutMs = 8000) {
+  console.log('[SharePanel] waitForCoverFrame 入口', { isVideo: (props.detail?.type || 'video') === 'video', hasUrl: !!coverFrameImageUrl.value })
   if ((props.detail?.type || 'video') !== 'video' || coverFrameImageUrl.value) {
+    console.log('[SharePanel] waitForCoverFrame 无需等待，直接 resolve')
     return Promise.resolve()
   }
   return new Promise(resolve => {
     const stop = watch(coverFrameImageUrl, url => {
       if (url) {
+        console.log('[SharePanel] waitForCoverFrame 监听到 coverFrameImageUrl，resolve')
         stop()
         resolve()
       }
     })
     setTimeout(() => {
+      console.log('[SharePanel] waitForCoverFrame 超时 resolve', { timeoutMs })
       stop()
       resolve()
     }, timeoutMs)
@@ -247,28 +352,48 @@ function waitForCoverFrame(timeoutMs = 8000) {
 
 /** 等待海报主图（posterMainImageSrc 对应的 img）加载完成后再继续 */
 function waitForPosterMainImageLoaded(timeoutMs = 10000) {
+  console.log('[SharePanel] waitForPosterMainImageLoaded 入口')
   const el = posterEl.value
-  if (!el) return Promise.resolve()
+  if (!el) {
+    console.log('[SharePanel] waitForPosterMainImageLoaded 无 posterEl，直接 resolve')
+    return Promise.resolve()
+  }
   const cardImg = el.querySelector('.card-img')
   if (!cardImg || !cardImg.src || cardImg.src === window.location.href) {
+    console.log('[SharePanel] waitForPosterMainImageLoaded 无 cardImg 或无 src，直接 resolve')
     return Promise.resolve()
   }
   if (cardImg.complete && cardImg.naturalHeight > 0) {
+    console.log('[SharePanel] waitForPosterMainImageLoaded 已加载完成，直接 resolve')
     return Promise.resolve()
   }
   return new Promise(resolve => {
-    cardImg.onload = () => resolve()
-    cardImg.onerror = () => resolve()
-    setTimeout(resolve, timeoutMs)
+    cardImg.onload = () => {
+      console.log('[SharePanel] waitForPosterMainImageLoaded onload resolve')
+      resolve()
+    }
+    cardImg.onerror = () => {
+      console.log('[SharePanel] waitForPosterMainImageLoaded onerror resolve')
+      resolve()
+    }
+    setTimeout(() => {
+      console.log('[SharePanel] waitForPosterMainImageLoaded 超时 resolve')
+      resolve()
+    }, timeoutMs)
   })
 }
 
 function generatePoster() {
-  if (!posterEl.value) return
+  console.log('[SharePanel] generatePoster 入口')
+  if (!posterEl.value) {
+    console.log('[SharePanel] generatePoster 无 posterEl，return')
+    return
+  }
   posterImageUrl.value = ''
 
   const el = posterEl.value
   const doCapture = () => {
+    console.log('[SharePanel] generatePoster doCapture 开始 html2canvas')
     const imgs = el.querySelectorAll('img')
     const loadPromises = Array.from(imgs).map(
       img =>
@@ -289,9 +414,11 @@ function generatePoster() {
 
     Promise.all(loadPromises)
       .then(() => {
+        console.log('[SharePanel] generatePoster 所有 img 加载完成，rAF 100ms')
         return new Promise(r => requestAnimationFrame(() => setTimeout(r, 100)))
       })
       .then(() => {
+        console.log('[SharePanel] generatePoster html2canvas 执行')
         return html2canvas(el, {
           useCORS: true,
           scale: 1,
@@ -300,17 +427,41 @@ function generatePoster() {
       })
       .then(canvas => {
         posterImageUrl.value = canvas.toDataURL('image/png')
+        console.log('[SharePanel] generatePoster html2canvas 成功')
       })
       .catch(() => {
         posterImageUrl.value = ''
-        alert('生成失败')
+        console.log('[SharePanel] generatePoster html2canvas 失败')
+        // alert('生成失败')
       })
   }
 
   waitForCoverFrame()
-    .then(() => nextTick())
-    .then(() => waitForPosterMainImageLoaded())
-    .then(doCapture)
+    .then(() => {
+      console.log('[SharePanel] generatePoster waitForCoverFrame then，nextTick')
+      return nextTick()
+    })
+    .then(() => {
+      // 视频类型下封面帧未就绪（超时或重试后仍黑）则不再生成，避免同一视频有时成功有时失败
+      if ((props.detail?.type || 'video') === 'video' && !coverFrameImageUrl.value) {
+        console.log('[SharePanel] generatePoster COVER_FRAME_NOT_READY，reject')
+        return Promise.reject(new Error('COVER_FRAME_NOT_READY'))
+      }
+      return waitForPosterMainImageLoaded()
+    })
+    .then(() => {
+      const cardImg = posterEl.value?.querySelector('.card-img')
+      if (cardImg && (props.detail?.type || 'video') === 'video' && (!cardImg.complete || cardImg.naturalHeight <= 0)) {
+        console.log('[SharePanel] generatePoster POSTER_MAIN_IMAGE_NOT_LOADED，reject')
+        return Promise.reject(new Error('POSTER_MAIN_IMAGE_NOT_LOADED'))
+      }
+      console.log('[SharePanel] generatePoster 校验通过，执行 doCapture')
+      doCapture()
+    })
+    .catch(() => {
+      posterImageUrl.value = ''
+      console.log('[SharePanel] generatePoster 链式 catch')
+    })
 }
 
 // function savePoster() {
@@ -393,6 +544,15 @@ defineExpose({ generatePoster })
   border-radius: var(--radius-lg);
   overflow: visible;
   position: relative;
+}
+
+/* 截帧用视频：移出视口、保持视频原始宽高，避免 v-show 导致部分浏览器不解码 */
+.cover-frame-video {
+  position: fixed;
+  left: 0;
+  top: 0;
+  /* z-index: -1; */
+  pointer-events: none;
 }
 
 /* 海报源：按 750px 画布全部 px，移出视口仅用于 html2canvas，成图即 750×约1325px */

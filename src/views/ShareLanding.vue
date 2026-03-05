@@ -138,10 +138,11 @@ function goMake() {
 }
 .bg-cover {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  inset: 0;
-  background-size: cover;
+  background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
 }
