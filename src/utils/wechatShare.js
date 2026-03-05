@@ -53,7 +53,7 @@ export function initWxShare(config) {
 
   const wx = typeof window !== 'undefined' ? window.wx : null
   if (!wx) {
-    alert('[wechatShare] 微信 JSSDK 未就绪，请确认 index.html 已引入 jweixin.js')
+    // alert('[wechatShare] 微信 JSSDK 未就绪，请确认 index.html 已引入 jweixin.js')
     return Promise.resolve()
   }
 

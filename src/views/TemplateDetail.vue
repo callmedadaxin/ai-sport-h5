@@ -34,13 +34,18 @@
           <video
             ref="videoEl"
             :src="detail?.videoUrl"
-            :poster="detail?.cover"
             class="video"
             loop
             playsinline
             preload="metadata"
             @play="playing = true"
             @pause="playing = false"
+          />
+          <!-- 未播放时用封面铺满视频区域（poster 无法控制铺满） -->
+          <div
+            v-if="detail?.cover && !playing"
+            class="video-poster-cover"
+            :style="{ backgroundImage: `url(${detail.cover})` }"
           />
           <div v-show="!playing" class="play-btn" @click="togglePlay">
             <span class="play-icon" />
@@ -73,9 +78,8 @@
           </div>
           <p class="guide-tip">
             <svg
+              class="svg-icon svg-icon--19"
               xmlns="http://www.w3.org/2000/svg"
-              width="19"
-              height="19"
               viewBox="0 0 19 19"
               fill="none"
             >
@@ -130,7 +134,9 @@ const detail = ref(null)
 const showUploadGuide = ref(false)
 const showUpload = ref(false)
 const id = computed(() => route.params.id)
+
 const isImageTemplate = computed(() => (detail.value?.type || 'video') === 'image')
+
 
 onMounted(() => {
   const type = route.query.type === 'image' ? 'image' : 'video'
@@ -186,6 +192,10 @@ function onUploadSuccess({ taskId }) {
 </script>
 
 <style scoped>
+.svg-icon--19 {
+  width: 0.19rem;
+  height: 0.19rem;
+}
 .template-detail {
   min-height: 100vh;
   position: relative;
@@ -308,6 +318,15 @@ function onUploadSuccess({ taskId }) {
   height: 100%;
   object-fit: cover;
   display: block;
+  pointer-events: none;
+}
+.video-poster-cover {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
   pointer-events: none;
 }
 .video-placeholder {

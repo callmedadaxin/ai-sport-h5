@@ -6,27 +6,35 @@
         活动首页
       </button>
     </header>
-    <!-- 全屏视频背景 -->
-    <div class="bg-video-wrap" @click="togglePlay">
-      <video
-        ref="videoEl"
-        :src="detail?.videoUrl"
-        :poster="detail?.coverUrl"
-        class="bg-video"
-        loop
-        playsinline
-        @play="playing = true"
-        @pause="playing = false"
-      />
-      <!-- 无视频时用封面图兜底 -->
-      <div
-        v-if="detail?.coverUrl && !detail?.videoUrl"
-        class="bg-cover"
-        :style="detail?.coverUrl ? { backgroundImage: `url(${detail.coverUrl})` } : {}"
-      />
-      <div v-show="!playing" class="play-overlay">
-        <span class="play-icon" />
-      </div>
+    <!-- 全屏展示：根据 type 区分，图片类型只显示 imageUrl，不显示播放 -->
+    <div class="bg-video-wrap" @click="!isImageType && togglePlay()">
+      <template v-if="isImageType">
+        <div
+          class="bg-cover"
+          :style="detail?.imageUrl ? { backgroundImage: `url(${detail.imageUrl})` } : {}"
+        />
+      </template>
+      <template v-else>
+        <video
+          ref="videoEl"
+          :src="detail?.videoUrl"
+          :poster="detail?.coverUrl"
+          class="bg-video"
+          loop
+          playsinline
+          @play="playing = true"
+          @pause="playing = false"
+        />
+        <!-- 无视频时用封面图兜底 -->
+        <div
+          v-if="detail?.coverUrl && !detail?.videoUrl"
+          class="bg-cover"
+          :style="detail?.coverUrl ? { backgroundImage: `url(${detail.coverUrl})` } : {}"
+        />
+        <div v-show="!playing" class="play-overlay">
+          <span class="play-icon" />
+        </div>
+      </template>
     </div>
 
     <!-- 底部制作同款按钮 -->
@@ -49,6 +57,8 @@ const videoEl = ref(null)
 const playing = ref(false)
 const detail = ref(null)
 const id = computed(() => route.params.id)
+/** 分享结果页根据 URL type 区分：type=image 时只显示图片，不显示播放 */
+const isImageType = computed(() => route.query.type === 'image')
 
 onMounted(() => {
   worksApi.detail(id.value).then((d) => { detail.value = d }).catch(() => {
@@ -71,7 +81,7 @@ function goHome() {
 
 function goMake() {
   const templateId = detail.value?.templateId || '1'
-  router.push('/template/' + templateId)
+  router.push('/template/' + templateId + '?type=' + detail.value?.type)
 }
 </script>
 

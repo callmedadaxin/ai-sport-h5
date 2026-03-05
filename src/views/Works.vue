@@ -14,11 +14,12 @@
       <section v-if="generating.length" class="section">
       <div class="section-head">
         <h3 class="section-title">
-          <i class="icon-loading"></i>
+          <span class="loading-spinner" aria-hidden="true"></span>
           正在生成中
         </h3>
         <button type="button" class="refresh" :disabled="refreshLoading" @click="load">
-          <i :class="refreshLoading ? 'icon-loading' : 'icon-refresh'"></i>
+          <span v-if="refreshLoading" class="loading-spinner" aria-hidden="true"></span>
+          <i v-else class="icon-refresh"></i>
           {{ refreshLoading ? '刷新中...' : '刷新进度' }}
         </button>
       </div>
@@ -37,9 +38,8 @@
 
         <p class="gen-tip">
           <svg
+            class="svg-icon svg-icon--18"
             xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
             viewBox="0 0 18 18"
             fill="none"
           >
@@ -55,7 +55,7 @@
     </section>
     <section class="section">
       <div class="section-head section-head-filter">
-        <h3 class="section-title">我的代言库({{ filteredDone.length }})</h3>
+        <h3 class="section-title">我的代言库</h3>
         <div class="filter-tabs">
           <button
             type="button"
@@ -83,7 +83,17 @@
           </button>
         </div>
       </div>
-      <div v-for="w in filteredDone" :key="w.id" class="work-card" :class="{ 'is-failed': w.status === 'failed' }">
+      <div v-if="refreshLoading" class="list-loading">
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <span class="list-loading-text">加载中...</span>
+      </div>
+      <div v-else-if="isEmpty" class="empty-state">
+        <p class="empty-text">还没有制作的内容</p>
+        <p class="empty-desc">去首页选择模板，制作你的数字代言吧</p>
+        <button type="button" class="empty-btn" @click="router.push('/')">去首页制作</button>
+      </div>
+      <template v-else>
+        <div v-for="w in filteredDone" :key="w.id" class="work-card" :class="{ 'is-failed': w.status === 'failed' }">
         <img
           :src="w.coverUrl || 'https://picsum.photos/200/150?random=' + w.id"
           alt=""
@@ -113,6 +123,7 @@
           </button>
         </div>
       </div>
+      </template>
     </section>
   </div>
 </template>
@@ -136,6 +147,11 @@ const filteredDone = computed(() => {
   return list.filter(w => (w.status || 'done') === statusFilter.value)
 })
 
+/** 无任何作品（无生成中、无已完成/失败列表）时显示空状态 */
+const isEmpty = computed(() => {
+  return !generating.value?.length && !(done.value?.length)
+})
+
 function load() {
   refreshLoading.value = true
   worksApi
@@ -155,6 +171,10 @@ onMounted(load)
 </script>
 
 <style scoped>
+.svg-icon--18 {
+  width: 0.18rem;
+  height: 0.18rem;
+}
 .works {
   background: #f5f5f5;
   padding-bottom: 0.5rem;
@@ -276,19 +296,33 @@ onMounted(load)
   gap: 0.05rem;
   margin-bottom: 0.1rem;
 }
-.icon-loading {
-  display: inline-flex;
+.list-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0.4rem;
+  /* 预留至少一行卡片高度，避免 loading 时页面跳动 */
+  min-height: 1.2rem;
+  box-sizing: border-box;
+}
+.list-loading-text {
+  font-size: 0.14rem;
+  color: #fff;
+}
+/* 与 SharePanel 同款旋转圆环，白色用于深色背景 */
+.loading-spinner {
+  display: inline-block;
   width: 0.18rem;
   height: 0.18rem;
-  background-image: url(../assets/image/star.png);
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  background-position: center center;
-  vertical-align: top;
-  margin-top: -0.02rem;
-  animation: icon-loading-spin 0.8s linear infinite;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: loading-spin 0.8s linear infinite;
+  flex-shrink: 0;
+  vertical-align: middle;
 }
-@keyframes icon-loading-spin {
+@keyframes loading-spin {
   to {
     transform: rotate(360deg);
   }
@@ -412,9 +446,10 @@ margin-top: 0.1rem;
   margin-top: 0.08rem;
 }
 .work-time {
-  font-size: 0.13rem;
+  font-size: 0.12rem;
   color: #999;
   margin-bottom: 0.075rem;
+  white-space: nowrap;
 }
 .detail-btn {
   height: 0.24rem;
@@ -431,5 +466,30 @@ margin-top: 0.1rem;
   letter-spacing: 0.03em;
   font-size: 0.12rem;
   white-space: nowrap;
+}
+.empty-state {
+  text-align: center;
+  padding: 0.4rem 0.2rem;
+  background: #fff;
+  border-radius: 0.1rem;
+}
+.empty-text {
+  font-size: 0.16rem;
+  color: #333;
+  margin-bottom: 0.08rem;
+}
+.empty-desc {
+  font-size: 0.13rem;
+  color: #999;
+  margin-bottom: 0.2rem;
+}
+.empty-btn {
+  padding: 0.1rem 0.24rem;
+  font-size: 0.14rem;
+  color: #fff;
+  background: #fb584d;
+  border: none;
+  border-radius: 0.08rem;
+  cursor: pointer;
 }
 </style>

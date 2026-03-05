@@ -8,7 +8,7 @@
       <!-- 海报 DOM：按 750px 画布全部用 px，移出视口仅用于生成图 -->
       <div class="poster-content poster-source" ref="posterEl" aria-hidden="true">
         <div class="card-img-wrap">
-          <img :src="detail?.coverUrl" alt="" class="card-img"  />
+          <img :src="posterMainImageSrc" alt="" class="card-img" />
           <div class="disclaimer-overlay">
             <span class="disclaimer-text">AI生成内容 请注意甄别</span>
           </div>
@@ -29,6 +29,15 @@
         </div>
       </div>
     </div>
+    <!-- 隐藏视频，仅用于根据 coverFrame 截取该帧生成海报主图 -->
+    <video
+      v-show="false"
+      ref="coverFrameVideoRef"
+      muted
+      playsinline
+      preload="auto"
+      crossorigin="anonymous"
+    />
     <!-- 微信分享引导遮罩 -->
     <Teleport to="body">
       <div v-show="showShareGuide" class="share-guide-mask" @click.self="closeShareGuide">
@@ -54,7 +63,7 @@
     <!-- 展示的是生成后的海报图片 -->
     <template v-if="posterImageUrl">
       <img :src="posterImageUrl" alt="分享海报" class="poster-image" />
-      <p class="save-tip">长按图片,即可保存或分享</p>
+      <p class="save-tip">长按图片,即可保存或分享到抖音等平台</p>
       <div class="share-icons">
         <div class="icon-item" @click="onShare('wechat')">
           <div class="icon-circle">
@@ -68,12 +77,12 @@
           </div>
           <span>分享到朋友圈</span>
         </div>
-        <div class="icon-item" @click="onShare('douyin')">
+        <!-- <div class="icon-item" @click="onShare('douyin')">
           <div class="icon-circle">
             <img src="../assets/image/douyin.svg" alt="" class="share-icon" />
           </div>
           <span>分享到抖音</span>
-        </div>
+        </div> -->
       </div>
     </template>
 
@@ -91,7 +100,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import QRCode from 'qrcode'
 import html2canvas from 'html2canvas'
 import { shareApi } from '../api'
@@ -100,8 +109,7 @@ import { initWxShareFromApi, isWechat } from '../utils/wechatShare'
 import { showToast } from '../utils/toast'
 
 // 与海报主文案一致，用于微信分享卡片描述
-const POSTER_COPY =
-  '我正在为大美安徽代言!这里有如画的风光,还有浓厚的运动氛围。一起到安徽打球去!'
+const POSTER_COPY = '我正在为大美安徽代言!这里有如画的风光,还有浓厚的运动氛围。一起到安徽打球去!'
 const POSTER_TITLE = '皖美运动汇'
 
 const props = defineProps({
@@ -109,12 +117,73 @@ const props = defineProps({
   detail: { type: Object, default: () => ({}) },
 })
 const emit = defineEmits(['close'])
+/** 作品类型：image 时分享链接带 type=image，分享结果页按图片展示 */
+const workType = computed(() => props.detail?.type || 'video')
+/** 海报主图：图片类型用 imageUrl，视频类型用 coverFrame 指定帧从视频截取的图片 */
 const posterEl = ref(null)
 const qrcodeCanvas = ref(null)
+const coverFrameVideoRef = ref(null)
+const coverFrameImageUrl = ref('')
 const posterImageUrl = ref('')
 const douyinSharing = ref(false)
 const showShareGuide = ref(false)
 const showDouyinGuide = ref(false)
+
+const DEFAULT_FPS = 25
+
+/** 海报主图地址：图片作品用 imageUrl，视频作品用 coverFrame 对应帧的截图 */
+const posterMainImageSrc = computed(() => {
+  const d = props.detail
+  if (!d) return ''
+  if ((d.type || 'video') === 'image') return d.imageUrl || ''
+  return coverFrameImageUrl.value || ''
+})
+
+function captureVideoFrame() {
+  const video = coverFrameVideoRef.value
+
+  const d = props.detail
+
+  if (!video || !d?.videoUrl || d?.type === 'image') return
+  const frameIndex = d.coverFrame != null ? d.coverFrame : 0
+  if (frameIndex < 0) return
+
+  coverFrameImageUrl.value = ''
+  video.src = d.videoUrl
+  video.load()
+
+  const time = frameIndex / DEFAULT_FPS
+
+  const onSeeked = () => {
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(video, 0, 0)
+      coverFrameImageUrl.value = canvas.toDataURL('image/jpeg', 0.92)
+    } catch (_) {
+      coverFrameImageUrl.value = ''
+    }
+    video.removeEventListener('seeked', onSeeked)
+    video.removeEventListener('error', onError)
+  }
+  const onError = () => {
+    coverFrameImageUrl.value = ''
+    video.removeEventListener('seeked', onSeeked)
+    video.removeEventListener('error', onError)
+  }
+  // 第一步：等待元数据加载完成
+  const onLoadedMetadata = () => {
+    const safeTime = Math.min(time, video.duration - 0.1)
+    video.currentTime = safeTime
+  }
+
+  video.addEventListener('loadedmetadata', onLoadedMetadata)
+  video.addEventListener('seeked', onSeeked)
+  video.addEventListener('error', onError)
+  // video.currentTime = time
+}
 
 function closeShareGuide() {
   showShareGuide.value = false
@@ -126,13 +195,29 @@ function closeDouyinGuide() {
 
 const shareUrl = () => {
   const base = typeof location !== 'undefined' ? location.origin : ''
-  return base + '/s/' + props.workId
+  const path = base + '/s/' + props.workId
+  return path + `?type=${workType.value}`
 }
 
 onMounted(() => {
   drawQr()
 })
 watch(() => props.workId, drawQr)
+watch(
+  () => [props.detail?.videoUrl, props.detail?.type, coverFrameVideoRef.value],
+  () => {
+    if (
+      (props.detail?.type || 'video') === 'video' &&
+      props.detail?.videoUrl !== null &&
+      coverFrameVideoRef.value !== null
+    ) {
+      captureVideoFrame()
+    } else {
+      coverFrameImageUrl.value = ''
+    }
+  },
+  { immediate: true }
+)
 
 function drawQr() {
   if (!qrcodeCanvas.value) return
@@ -142,47 +227,90 @@ function drawQr() {
   }).catch(() => {})
 }
 
+function waitForCoverFrame(timeoutMs = 8000) {
+  if ((props.detail?.type || 'video') !== 'video' || coverFrameImageUrl.value) {
+    return Promise.resolve()
+  }
+  return new Promise(resolve => {
+    const stop = watch(coverFrameImageUrl, url => {
+      if (url) {
+        stop()
+        resolve()
+      }
+    })
+    setTimeout(() => {
+      stop()
+      resolve()
+    }, timeoutMs)
+  })
+}
+
+/** 等待海报主图（posterMainImageSrc 对应的 img）加载完成后再继续 */
+function waitForPosterMainImageLoaded(timeoutMs = 10000) {
+  const el = posterEl.value
+  if (!el) return Promise.resolve()
+  const cardImg = el.querySelector('.card-img')
+  if (!cardImg || !cardImg.src || cardImg.src === window.location.href) {
+    return Promise.resolve()
+  }
+  if (cardImg.complete && cardImg.naturalHeight > 0) {
+    return Promise.resolve()
+  }
+  return new Promise(resolve => {
+    cardImg.onload = () => resolve()
+    cardImg.onerror = () => resolve()
+    setTimeout(resolve, timeoutMs)
+  })
+}
+
 function generatePoster() {
   if (!posterEl.value) return
   posterImageUrl.value = ''
 
   const el = posterEl.value
-  const imgs = el.querySelectorAll('img')
-  const loadPromises = Array.from(imgs).map(
-    img =>
-      new Promise(resolve => {
-        if (!img.src || img.src === window.location.href) {
-          resolve()
-          return
-        }
-        if (img.complete && img.naturalHeight > 0) {
-          resolve()
-          return
-        }
-        img.onload = () => resolve()
-        img.onerror = () => resolve()
-        setTimeout(resolve, 3000)
-      })
-  )
+  const doCapture = () => {
+    const imgs = el.querySelectorAll('img')
+    const loadPromises = Array.from(imgs).map(
+      img =>
+        new Promise(resolve => {
+          if (!img.src || img.src === window.location.href) {
+            resolve()
+            return
+          }
+          if (img.complete && img.naturalHeight > 0) {
+            resolve()
+            return
+          }
+          img.onload = () => resolve()
+          img.onerror = () => resolve()
+          setTimeout(resolve, 5000)
+        })
+    )
 
-  Promise.all(loadPromises)
-    .then(() => {
-      return new Promise(r => requestAnimationFrame(() => setTimeout(r, 100)))
-    })
-    .then(() => {
-      return html2canvas(el, {
-        useCORS: true,
-        scale: 1,
-        backgroundColor: '#fff0e3',
+    Promise.all(loadPromises)
+      .then(() => {
+        return new Promise(r => requestAnimationFrame(() => setTimeout(r, 100)))
       })
-    })
-    .then(canvas => {
-      posterImageUrl.value = canvas.toDataURL('image/png')
-    })
-    .catch(() => {
-      posterImageUrl.value = ''
-      alert('生成失败')
-    })
+      .then(() => {
+        return html2canvas(el, {
+          useCORS: true,
+          scale: 1,
+          backgroundColor: '#fff0e3',
+        })
+      })
+      .then(canvas => {
+        posterImageUrl.value = canvas.toDataURL('image/png')
+      })
+      .catch(() => {
+        posterImageUrl.value = ''
+        alert('生成失败')
+      })
+  }
+
+  waitForCoverFrame()
+    .then(() => nextTick())
+    .then(() => waitForPosterMainImageLoaded())
+    .then(doCapture)
 }
 
 // function savePoster() {
@@ -201,7 +329,7 @@ async function onShare(type) {
       title: POSTER_TITLE,
       desc: POSTER_COPY,
       link: shareUrl(),
-      imgUrl: props.detail?.coverUrl || 'https://jiuzhuokeji.oss-cn-beijing.aliyuncs.com/outer/logo.png',
+      imgUrl: 'https://media.jiuzhuokeji.cn/static/imgs/logo.png',
     })
   } else if (type === 'douyin') {
     if (isWechat()) {
@@ -218,7 +346,7 @@ async function onShare(type) {
       } catch (_) {
         /* 上传失败时使用封面图兜底 */
       }
-      if (!imagePath) imagePath = props.detail?.coverUrl || ''
+      if (!imagePath) imagePath = ''
       if (!imagePath) {
         showToast('暂无可分享的图片')
         return

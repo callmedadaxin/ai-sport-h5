@@ -90,7 +90,7 @@
   --vh: 1vh; /* 默认值，由 JavaScript 动态更新 */
 
   /* ========== 布局 ========== */
-  --page-max-width: 6.4rem;
+  --page-max-width: 3.75rem; /* 根字号封顶时 3.75×160=600px，限制页面宽度不超 600 */
   --header-height: 0.5rem;
   --touch-min: 0.44rem;
 }

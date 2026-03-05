@@ -4,12 +4,48 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="color-scheme" content="light" />
+    <!-- CSP：可信域名 static/state/media.jiuzhuokeji.cn、res.wx.qq.com、universe.10155.com（媒体） -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src 'self' https://res.wx.qq.com https://static.jiuzhuokeji.cn https://state.jiuzhuokeji.cn https://media.jiuzhuokeji.cn;
+        style-src 'self' 'unsafe-inline' https://static.jiuzhuokeji.cn https://state.jiuzhuokeji.cn https://media.jiuzhuokeji.cn;
+        img-src 'self' data: https: blob:;
+        connect-src 'self' https://res.wx.qq.com https://static.jiuzhuokeji.cn https://state.jiuzhuokeji.cn https://media.jiuzhuokeji.cn;
+        font-src 'self' https://static.jiuzhuokeji.cn https://state.jiuzhuokeji.cn https://media.jiuzhuokeji.cn;
+        media-src 'self' https://static.jiuzhuokeji.cn https://state.jiuzhuokeji.cn https://media.jiuzhuokeji.cn https://universe.10155.com https://listen.10155.com;
+        frame-src 'self' https://res.wx.qq.com;
+        base-uri 'self';
+        form-action 'self';
+      "
+    />
     <title>2026 皖美运动汇 - 我为家乡代言</title>
+    <style>
+      /* 首屏预制背景，与主题 --color-bg-page 一致，避免白屏闪烁 */
+      html, body { margin: 0; height: 100%; min-height: 100%; background: #e8e8e8; }
+      #app { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #e8e8e8; }
+      .app-loading { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+      .app-loading__spinner {
+        width: 40px; height: 40px;
+        border: 3px solid rgba(228, 18, 8, 0.2);
+        border-top-color: #e41208;
+        border-radius: 50%;
+        animation: app-loading-spin 0.8s linear infinite;
+      }
+      .app-loading__text { font-size: 14px; color: #666; font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; }
+      @keyframes app-loading-spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
-    <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    <div id="app">
+      <div class="app-loading" aria-busy="true" aria-label="加载中">
+        <div class="app-loading__spinner"></div>
+        <span class="app-loading__text">加载中...</span>
+      </div>
+    </div>
     <script type="module" src="/src/main.js"></script>
+    <script src="https://static.jiuzhuokeji.cn/static/js/jweixin-1.6.0.js"></script>
     <!-- <script src="https://lf3-static.bytednsdoc.com/obj/eden-cn/fljpeh7hozbf/douyin_open/cdn/dy_open_util_v0.0.6.umd.js"></script> -->
   </body>
 </html>

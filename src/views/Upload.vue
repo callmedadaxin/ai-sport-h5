@@ -14,9 +14,8 @@
         @click="clearPhoto"
       >
         <svg
+          class="svg-icon svg-icon--10x12"
           xmlns="http://www.w3.org/2000/svg"
-          width="10"
-          height="12"
           viewBox="0 0 10 12"
           fill="none"
         >
@@ -145,6 +144,7 @@ import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
 import BottomSheet from '../components/BottomSheet.vue'
 import { templateApi, worksApi } from '../api'
+import { showToast } from '../utils/toast'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -331,7 +331,7 @@ function submit() {
       emit('success', { taskId: res.taskId })
     })
     .catch(err => {
-      alert(err?.message || '提交失败')
+      showToast(err?.message || '提交失败')
     })
     .finally(() => {
       submitLoading.value = false
@@ -340,6 +340,10 @@ function submit() {
 </script>
 
 <style scoped>
+.svg-icon--10x12 {
+  width: 0.1rem;
+  height: 0.12rem;
+}
 /* 标题栏（在 BottomSheet 的 title 槽内，与渐变背景搭配） */
 .upload-nav {
   display: flex;

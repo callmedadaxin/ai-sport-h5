@@ -12,12 +12,10 @@
     <h2 class="status-title">
       <p class="status-title-text">
         <svg
+          class="icon-loading"
           xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
           viewBox="0 0 20 20"
           fill="none"
-          class="icon-loading"
         >
           <g clip-path="url(#clip0_8024_1057)">
             <path
@@ -130,6 +128,10 @@ function toAnother() {
 </script>
 
 <style scoped>
+.icon-loading {
+  width: 0.2rem;
+  height: 0.2rem;
+}
 /* 页面布局：与 TemplateDetail 一致，底部毛玻璃 */
 .page-wrap.making {
   min-height: 100vh;

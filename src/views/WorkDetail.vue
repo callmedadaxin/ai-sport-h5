@@ -5,26 +5,26 @@
       <template v-if="isImageWork">
         <div
           class="bg-cover"
-          :style="detail?.coverUrl ? { backgroundImage: `url(${detail.coverUrl})` } : {}"
+          :style="detail?.imageUrl ? { backgroundImage: `url(${detail.imageUrl})` } : {}"
         />
       </template>
       <template v-else>
         <video
           ref="videoEl"
           :src="detail?.videoUrl"
-          :poster="detail?.coverUrl"
           class="bg-video"
           loop
           playsinline
+          crossorigin="anonymous"
           preload="metadata"
           @play="playing = true"
           @pause="playing = false"
         />
-        <!-- 无视频时用封面图兜底 -->
+        <!-- 未播放时全屏显示封面（用 bg-cover 保证铺满）；无视频时也用封面兜底 -->
         <div
-          v-if="detail?.coverUrl && !detail?.videoUrl"
+          v-if="detail?.coverUrl && (!detail?.videoUrl || !playing)"
           class="bg-cover"
-          :style="detail?.coverUrl ? { backgroundImage: `url(${detail.coverUrl})` } : {}"
+          :style="{ backgroundImage: `url(${detail.coverUrl})` }"
         />
         <div v-show="!playing" class="play-overlay" @click="togglePlay">
           <span class="play-icon" />
@@ -55,10 +55,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { worksApi } from '../api'
-import SharePanel from '../components/SharePanel.vue'
+
+// 仅点击「生成分享海报」时再加载，减少作品页首包体积
+const SharePanel = defineAsyncComponent(() => import('../components/SharePanel.vue'))
 
 const route = useRoute()
 const router = useRouter()
@@ -75,7 +77,6 @@ onMounted(() => {
 })
 
 function togglePlay() {
-  console.log('togglePlay', videoEl.value, detail.value?.videoUrl)
   const video = videoEl.value
   if (!video || !detail.value?.videoUrl) return
   if (playing.value) {
@@ -130,8 +131,7 @@ function openShare() {
   position: absolute;
   width: 100%;
   height: 100%;
-  inset: 0;
-  background-size: cover;
+  background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
 }
@@ -220,6 +220,7 @@ function openShare() {
   font-size: var(--font-size-sm);
   color: rgba(255, 255, 255, 0.85);
   margin: 0 0 var(--space-xl);
+  white-space: nowrap;
 }
 .share-btn {
   width: 100%;
