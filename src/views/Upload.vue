@@ -107,6 +107,16 @@
 
   <Teleport to="body">
     <Transition name="fade">
+      <div v-show="imageProcessingLoading" class="submit-loading-mask">
+        <div class="submit-loading-box">
+          <div class="submit-loading-spinner" />
+          <span class="submit-loading-text">图片处理中...</span>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+  <Teleport to="body">
+    <Transition name="fade">
       <div v-show="submitLoading" class="submit-loading-mask">
         <div class="submit-loading-box">
           <div class="submit-loading-spinner" />
@@ -142,9 +152,88 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.css'
+import exifr from 'exifr'
+import EXIF from 'exif-js'
 import BottomSheet from '../components/BottomSheet.vue'
 import { templateApi, worksApi } from '../api'
 import { showToast } from '../utils/toast'
+
+const ORIENTATION_TIMEOUT_MS = 5000
+/** 为 true 时，校正后的图片会在新窗口单独打开，便于查看效果；测试完改回 false */
+const SHOW_ORIENTATION_PREVIEW = true
+
+function getImageOrientation(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = function (event) {
+      const img = new Image()
+      img.onload = function () {
+        EXIF.getData(img, function () {
+          const orientation = EXIF.getTag(this, 'Orientation')
+          showToast(orientation)
+          resolve(orientation)
+        })
+      }
+      img.src = event.target.result
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+/**
+ * 根据 EXIF Orientation 校正图片方向，返回校正后的 DataURL。
+ * 使用 exifr 从 File 直接解析 orientation；任一步失败或超时则直接返回原图。
+ */
+function correctImageOrientation(file) {
+  getImageOrientation(file)
+  const readDataUrl = () =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = () => reject(new Error('读取图片失败'))
+      reader.readAsDataURL(file)
+    })
+
+  return readDataUrl().then(dataUrl => {
+    const withTimeout = Promise.race([
+      Promise.all([exifr.orientation(file).catch(() => 1)]).then(([orientation]) => {
+        // orientation 为数字 1–8，无 EXIF 时 exifr 可能返回 undefined，视为 1 不旋转
+        if (!orientation || orientation === 1) return dataUrl
+        return new Promise((resolve, reject) => {
+          const img = new Image()
+          img.onerror = () => reject(new Error('图片加载失败'))
+          img.onload = () => {
+            try {
+              const w = img.naturalWidth
+              const h = img.naturalHeight
+              const canvas = document.createElement('canvas')
+              const ctx = canvas.getContext('2d')
+              if (!ctx) {
+                resolve(dataUrl)
+                return
+              }
+              canvas.width = w
+              canvas.height = h
+
+              ctx.drawImage(img, 0, 0)
+              const resultUrl = canvas.toDataURL('image/jpeg', 0.9)
+
+              resolve(resultUrl)
+            } catch (err) {
+              resolve(dataUrl)
+            }
+          }
+          img.src = dataUrl
+        })
+      }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('orientation timeout')), ORIENTATION_TIMEOUT_MS)
+      ),
+    ])
+    return withTimeout.catch(() => dataUrl)
+  })
+}
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -165,6 +254,7 @@ const photoList = ref([])
 const selectedIndex = ref(-1)
 const cropImageSrc = ref('')
 const cropImgRef = ref(null)
+const imageProcessingLoading = ref(false)
 const submitLoading = ref(false)
 let cropperInstance = null
 
@@ -286,12 +376,22 @@ function chooseAlbum() {
 function onFileSelect(e) {
   const file = e.target.files?.[0]
   if (!file) return
-  const reader = new FileReader()
-  reader.onload = () => {
-    cropImageSrc.value = reader.result
-  }
-  reader.readAsDataURL(file)
   e.target.value = ''
+  imageProcessingLoading.value = true
+  correctImageOrientation(file)
+    .then(dataUrl => {
+      cropImageSrc.value = dataUrl
+    })
+    .catch(() => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        cropImageSrc.value = reader.result
+      }
+      reader.readAsDataURL(file)
+    })
+    .finally(() => {
+      imageProcessingLoading.value = false
+    })
 }
 
 function closeCrop() {

@@ -103,7 +103,7 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import QRCode from 'qrcode'
 import html2canvas from 'html2canvas'
-import { shareApi } from '../api'
+import { shareApi, worksApi } from '../api'
 import { buildDouyinShareSchema, shareImageToDouyin } from '../utils/douyinShare'
 import { initWxShareFromApi, isWechat } from '../utils/wechatShare'
 import { showToast } from '../utils/toast'
@@ -141,6 +141,22 @@ const posterMainImageSrc = computed(() => {
 
 const MAX_COVER_FRAME_RETRIES = 2
 const BLACK_FRAME_THRESHOLD = 25
+
+/** 降级：调用后端截帧接口获取封面图，videoUrl 需 FFmpeg 可访问 */
+function fallbackFrameCapture(videoUrl, second) {
+  if (!videoUrl || second < 0) return
+  worksApi
+    .frameCapture({ videoUrl, second })
+    .then((data) => {
+      if (data?.base64) {
+        coverFrameImageUrl.value = data.base64
+        console.log('[SharePanel] fallbackFrameCapture 成功')
+      }
+    })
+    .catch((e) => {
+      console.warn('[SharePanel] fallbackFrameCapture 失败', e?.message)
+    })
+}
 
 /** 检测 canvas 内容是否接近全黑（采样中心与四角区域平均亮度） */
 function isCanvasMostlyBlack(canvas) {
@@ -202,6 +218,7 @@ function captureVideoFrame() {
         retryCount++
         video.currentTime = Math.min(currentTryTime, video.duration - 0.1)
       } else {
+        fallbackFrameCapture(d.videoUrl, currentTryTime)
         cleanup()
       }
       return
@@ -225,7 +242,8 @@ function captureVideoFrame() {
           video.currentTime = currentTryTime
           console.log('[SharePanel] doCapture 黑帧重试下一帧', { currentTryTime, retryCount })
         } else {
-          console.log('[SharePanel] doCapture 黑帧重试用尽，放弃')
+          console.log('[SharePanel] doCapture 黑帧重试用尽，降级后端截帧')
+          fallbackFrameCapture(d.videoUrl, currentTryTime)
           cleanup()
         }
         return
@@ -233,8 +251,8 @@ function captureVideoFrame() {
       coverFrameImageUrl.value = canvas.toDataURL('image/jpeg', 0.92)
       console.log('[SharePanel] doCapture 成功，已设置 coverFrameImageUrl')
     } catch (_) {
-      console.log('[SharePanel] doCapture catch 异常')
-      coverFrameImageUrl.value = ''
+      console.log('[SharePanel] doCapture catch 异常，降级后端截帧')
+      fallbackFrameCapture(d.videoUrl, currentTryTime)
     }
     cleanup()
   }
@@ -266,7 +284,8 @@ function captureVideoFrame() {
   }
 
   const onError = () => {
-    console.log('[SharePanel] video error')
+    console.log('[SharePanel] video error，降级后端截帧')
+    fallbackFrameCapture(d.videoUrl, time)
     coverFrameImageUrl.value = ''
     cleanup()
   }
@@ -549,9 +568,9 @@ defineExpose({ generatePoster })
 /* 截帧用视频：移出视口、保持视频原始宽高，避免 v-show 导致部分浏览器不解码 */
 .cover-frame-video {
   position: fixed;
-  left: 0;
+  left: -9999px;
   top: 0;
-  /* z-index: -1; */
+  z-index: -1;
   pointer-events: none;
 }
 

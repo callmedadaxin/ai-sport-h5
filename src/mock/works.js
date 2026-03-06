@@ -18,7 +18,7 @@ export function getWorksList() {
     generating.push({
       taskId,
       templateId: t.templateId,
-      templateTitle: t.templateTitle || '皖美运动·跑步篇',
+      templateTitle: t.templateTitle,
       avatarUrl: t.avatarUrl,
       progress: t.progress ?? 0,
       status: 'generating',

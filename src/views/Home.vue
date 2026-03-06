@@ -124,7 +124,7 @@
           <div v-for="t in templates" :key="t.id" class="template-card" @click="goTemplate(t.id)">
             <div class="template-bg"></div>
             <div class="thumb-wrap">
-              <img :src="t.cover" :alt="t.title" class="thumb" loading="lazy" />
+              <img :src="t.cover"  :alt="t.title" class="thumb" loading="lazy" />
             </div>
             <!-- <span class="tag" :class="getTagColorClass(t.tag)">{{ t.tag || '模板' }}</span> -->
 

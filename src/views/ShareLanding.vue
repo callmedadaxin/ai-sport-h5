@@ -62,7 +62,7 @@ const isImageType = computed(() => route.query.type === 'image')
 
 onMounted(() => {
   worksApi.detail(id.value).then((d) => { detail.value = d }).catch(() => {
-    detail.value = { title: '皖美运动·跑步篇', videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4' }
+    detail.value = { title: '皖美运动', videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4' }
   })
 })
 

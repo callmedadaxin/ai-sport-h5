@@ -81,6 +81,10 @@ export const worksApi = {
   refreshProgress(taskId) {
     return request.get(`/works/progress/${taskId}`)
   },
+  /** 视频截帧（后端 FFmpeg），用于封面帧预览降级。参数 videoUrl, second(秒) */
+  frameCapture({ videoUrl, second }) {
+    return request.post('/works/frame-capture', { videoUrl, second })
+  },
 }
 
 /** 微信分享签名：GET /share/wechat/signature?url=当前页完整 URL（不含 hash） */

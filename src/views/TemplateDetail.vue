@@ -19,7 +19,7 @@
       <div class="card-head">
         <span class="card-title-main">{{ detail?.title || '皖美运动' }}</span>
         <span class="card-title-divider" />
-        <span class="card-title-tag">{{ detail?.tag || detail?.subtitle || '跑步篇' }}</span>
+        <!-- <span class="card-title-tag">{{ detail?.tag || detail?.subtitle || '跑步篇' }}</span> -->
       </div>
 
       <!-- 视频区：video 类型可播放，image 类型只展示封面图 -->
@@ -151,7 +151,7 @@ onMounted(() => {
     .catch(() => {
       detail.value = {
         title: '皖美运动',
-        tag: '跑步篇',
+        // tag: '跑步篇',
         cover: '',
         videoUrl: '',
         subtitle: '',
