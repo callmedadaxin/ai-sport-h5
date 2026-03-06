@@ -1,9 +1,11 @@
 <template>
   <div class="page-wrap template-detail">
     <!-- 背景：视频封面图 -->
-    <div
+    <FallbackBg
+      v-if="detail?.originCover || detail?.cover"
+      :origin-cover="detail?.originCover"
+      :cover-url="detail?.cover"
       class="bg-cover"
-      :style="detail?.cover ? { backgroundImage: `url(${detail.cover})` } : {}"
     />
     <!-- 毛玻璃遮罩：盖在封面上 -->
     <div class="bg-glass" />
@@ -18,39 +20,54 @@
       <!-- 标题：主标题 | 竖线 | tag/副标题 -->
       <div class="card-head">
         <span class="card-title-main">{{ detail?.title || '皖美运动' }}</span>
-        <span class="card-title-divider" />
         <!-- <span class="card-title-tag">{{ detail?.tag || detail?.subtitle || '跑步篇' }}</span> -->
       </div>
 
-      <!-- 视频区：video 类型可播放，image 类型只展示封面图 -->
+      <!-- 视频区：video 类型可播放，image 类型只展示封面图；比例 243×374 用 padding-bottom 兼容旧浏览器 -->
       <div class="video-wrap" @click="!isImageTemplate && togglePlay()">
-        <template v-if="isImageTemplate">
-          <div
-            class="video video-placeholder"
-            :style="detail?.cover ? { backgroundImage: `url(${detail.cover})` } : {}"
-          />
-        </template>
-        <template v-else>
-          <video
-            ref="videoEl"
-            :src="detail?.videoUrl"
-            class="video"
-            loop
-            playsinline
-            preload="metadata"
-            @play="playing = true"
-            @pause="playing = false"
-          />
-          <!-- 未播放时用封面铺满视频区域（poster 无法控制铺满） -->
-          <div
-            v-if="detail?.cover && !playing"
-            class="video-poster-cover"
-            :style="{ backgroundImage: `url(${detail.cover})` }"
-          />
-          <div v-show="!playing" class="play-btn" @click="togglePlay">
-            <span class="play-icon" />
-          </div>
-        </template>
+        <div class="video-wrap-inner">
+          <template v-if="isImageTemplate">
+            <FallbackBg
+              v-if="detail?.originCover || detail?.cover"
+              :origin-cover="detail?.originCover"
+              :cover-url="detail?.cover"
+              class="video video-placeholder"
+            />
+          </template>
+          <template v-else>
+            <!-- <FallbackVideo
+              ref="videoEl"
+              :origin-video-url="detail?.originVideoUrl"
+              :video-url="detail?.videoUrl"
+              :origin-cover="detail?.originCover"
+              :cover-url="detail?.cover"
+              class="video"
+              playsinline
+              preload="metadata"
+              @play="playing = true"
+              @pause="playing = false"
+            /> -->
+            <video
+              ref="videoEl"
+              :src="detail?.videoUrl"
+              class="video"
+              playsinline
+              preload="metadata"
+              @play="playing = true"
+              @pause="playing = false"
+            />
+            <!-- 未播放时用封面铺满视频区域（poster 无法控制铺满） -->
+            <FallbackBg
+              v-if="!playing"
+              :origin-cover="detail?.originCover"
+              :cover-url="detail?.cover"
+              class="video-poster-cover"
+            />
+            <div v-show="!playing" class="play-btn" @click="togglePlay">
+              <span class="play-icon" />
+            </div>
+          </template>
+        </div>
       </div>
     </div>
 
@@ -121,6 +138,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { templateApi } from '../api'
+import FallbackBg from '../components/FallbackBg.vue'
 import BottomSheet from '../components/BottomSheet.vue'
 import Upload from './Upload.vue'
 import imgFace from '../assets/image/ok-img.png'
@@ -273,7 +291,6 @@ function onUploadSuccess({ taskId }) {
   position: relative;
   z-index: 2;
   width: 3.2rem;
-  height: 4.56rem;
   background: linear-gradient(180deg, #fff0e3 0%, #ffe4cc 100%);
   border-radius: 0.2rem;
   overflow: hidden;
@@ -303,17 +320,25 @@ function onUploadSuccess({ taskId }) {
   color: #000;
 }
 
-/* 视频区：658×349 比例，圆角 + 封面 + 播放 overlay */
+/* 视频区：243×374 比例（与图片/视频展示一致），padding-bottom 兼容旧浏览器 */
 .video-wrap {
   position: relative;
   width: 3rem;
-  height: 4rem;
+  height: 0;
+  padding-bottom: 177%; /* 374/243 */
   background: #000;
   border-radius: 0.1rem;
   overflow: hidden;
   margin-bottom: 0.15rem;
   cursor: pointer;
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+}
+.video-wrap-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 .video {
   width: 100%;

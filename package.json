@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "pnpm build && pnpm scp1 && pnpm scp2",
+    "deploy": "pnpm build && pnpm scp && pnpm scp1",
     "scp1": "scp -r dist/* h51:/var/www/h5/",
     "scp2": "scp -r dist/* h52:/var/www/h5/",
     "scp": "scp -r dist/* h5:/var/www/h5/",

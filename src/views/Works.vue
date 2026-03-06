@@ -94,8 +94,10 @@
       </div>
       <template v-else>
         <div v-for="w in filteredDone" :key="w.id" class="work-card" :class="{ 'is-failed': w.status === 'failed' }">
-        <img
-          :src="w.coverUrl || 'https://picsum.photos/200/150?random=' + w.id"
+        <FallbackImage
+          :origin-cover="w.originCover"
+          :cover-url="w.coverUrl"
+          :fallback-url="'https://picsum.photos/200/150?random=' + w.id"
           alt=""
           class="work-thumb"
         />
@@ -132,6 +134,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { worksApi } from '../api'
+import FallbackImage from '../components/FallbackImage.vue'
 
 const router = useRouter()
 const generating = ref([])

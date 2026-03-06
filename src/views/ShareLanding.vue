@@ -20,7 +20,6 @@
           :src="detail?.videoUrl"
           :poster="detail?.coverUrl"
           class="bg-video"
-          loop
           playsinline
           @play="playing = true"
           @pause="playing = false"
@@ -124,7 +123,10 @@ function goMake() {
 /* 全屏视频背景层 */
 .bg-video-wrap {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100vh;
+  height: 100vh;
   z-index: 0;
   background: var(--color-text-primary);
   cursor: pointer;

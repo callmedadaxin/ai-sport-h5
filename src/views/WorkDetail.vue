@@ -13,7 +13,6 @@
           ref="videoEl"
           :src="detail?.videoUrl"
           class="bg-video"
-          loop
           playsinline
           crossorigin="anonymous"
           preload="metadata"

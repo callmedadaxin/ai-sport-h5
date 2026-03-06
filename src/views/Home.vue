@@ -124,7 +124,13 @@
           <div v-for="t in templates" :key="t.id" class="template-card" @click="goTemplate(t.id)">
             <div class="template-bg"></div>
             <div class="thumb-wrap">
-              <img :src="t.cover"  :alt="t.title" class="thumb" loading="lazy" />
+              <FallbackImage
+              :origin-cover="t.originCover"
+              :cover-url="t.cover"
+              :alt="t.title"
+              class="thumb"
+              loading="lazy"
+            />
             </div>
             <!-- <span class="tag" :class="getTagColorClass(t.tag)">{{ t.tag || '模板' }}</span> -->
 
@@ -160,6 +166,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { templateApi } from '../api'
 import { initWxShareFromApi } from '../utils/wechatShare'
+import FallbackImage from '../components/FallbackImage.vue'
 
 import imgHot from '../assets/image/hot.png'
 import imgAi from '../assets/image/star.png'
