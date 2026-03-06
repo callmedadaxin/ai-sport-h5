@@ -1,0 +1,16 @@
+# 构建产物
+dist
+.vite
+
+# 依赖
+node_modules
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# 其他
+*.min.js
+*.min.css
+.DS_Store
+coverage
+*.md
